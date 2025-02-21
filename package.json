@@ -2,7 +2,8 @@
   "name": "financial-portfolio-manager",
   "private": true,
   "engines": {
-    "node":"^16.14.2"
+    "node":"^16.14.2",
+    "yarn":"^1.22.22"
   },
   "dependencies": {
     "@babel/preset-react": "^7.26.3",
