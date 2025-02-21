@@ -1,1 +1,1 @@
-import 'src/demo';
+import '@src/demo';
