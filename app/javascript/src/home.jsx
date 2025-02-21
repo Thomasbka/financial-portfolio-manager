@@ -1,10 +1,11 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import Layout from './layout';
+import './home.scss';
 
 const Home = () => (
   <Layout>
-    <h1>Hello World</h1>
+    <h1 className="text-uppercase">Hello World</h1>
   </Layout>
 )
 
