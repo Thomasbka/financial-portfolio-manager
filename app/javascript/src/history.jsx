@@ -1,17 +1,19 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import { BrowserRouter as Router} from "react-router-dom";
 import Layout from './layout';
-import './home.scss';
 
-const Home = () => (
-  <Layout>
-    <h1 className="text-uppercase">Hello World</h1>
-  </Layout>
+const History = () => (
+  <Router>
+    <Layout>
+      <h1>History page</h1>
+    </Layout>
+  </Router>
 )
 
 document.addEventListener('DOMContentLoaded', () => {
   ReactDOM.render(
-    <Home />,
+    <History />,
     document.body.appendChild(document.createElement('div')),
   )
 })

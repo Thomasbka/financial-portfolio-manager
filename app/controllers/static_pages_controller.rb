@@ -1,7 +1,16 @@
 class StaticPagesController < ApplicationController
-  def home
+  def dashboard
   end
 
-  def demo
+  def portfolio
+  end
+
+  def analyser
+  end
+
+  def tracker
+  end
+
+  def history
   end
 end
