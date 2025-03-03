@@ -27,7 +27,6 @@ function App() {
   return (
     <Router>
       <Switch>
-        {/* Use 'exact' on the root route so it doesn't also match subpaths */}
         <Route exact path="/" component={Dashboard} />
         <Route path="/analyser" component={Analyser} />
         <Route path="/history" component={History} />
