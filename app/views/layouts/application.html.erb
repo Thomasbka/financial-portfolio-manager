@@ -13,6 +13,10 @@
   </head>
 
   <body>
-    <%= yield %>
+    <div id="root">
+      <%= yield %>
+    </div>
+
+    <%= javascript_packs_with_chunks_tag 'application' %>
   </body>
 </html>
