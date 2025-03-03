@@ -6,7 +6,7 @@ import Layout from './layout';
 const Analyser = () => (
   <Router>
     <Layout>
-      <h1>Analyser page</h1>
+      <h2 className="text-uppercase text-center">Analyser</h2>
     </Layout>
   </Router>
 )

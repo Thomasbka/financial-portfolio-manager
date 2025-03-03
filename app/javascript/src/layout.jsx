@@ -75,19 +75,19 @@ const Layout = ({ children }) => {
         {!isMobile && (
           <aside className="sidebar">
             <nav className="nav flex-column p-2">
-              <a className="nav-link" href="/">
+              <a className="nav-link text-white" href="/">
                 Dashboard
               </a>
-              <a className="nav-link" href="/portfolio">
+              <a className="nav-link text-white" href="/portfolio">
                 Portfolio
               </a>
-              <a className="nav-link" href="/analyser">
+              <a className="nav-link text-white" href="/analyser">
                 Analyser
               </a>
-              <a className="nav-link" href="/tracker">
+              <a className="nav-link text-white" href="/tracker">
                 Tracker
               </a>
-              <a className="nav-link" href="/history">
+              <a className="nav-link text-white" href="/history">
                 History
               </a>
             </nav>
@@ -95,7 +95,7 @@ const Layout = ({ children }) => {
         )}
         <main className="content-area p-3">{children}</main>
       </div>
-      <footer className="footer bg-secondary text-white text-center pt-2">
+      <footer className="footer bg-dark text-white text-center pt-2">
         <div className="container">
           <p>&copy; {new Date().getFullYear()} Financial Portfolio Manager. All rights reserved.</p>
         </div>

@@ -6,7 +6,7 @@ import Layout from './layout';
 const Tracker = () => (
   <Router>
     <Layout>
-      <h1>Tracker page</h1>
+      <h2 className="text-uppercase text-center">Tracker</h2>
     </Layout>
   </Router>
 )
