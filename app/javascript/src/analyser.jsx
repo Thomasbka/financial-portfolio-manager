@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import ReactDOM from 'react-dom';
 import Layout from './layout';
 import './analyser.scss';
 
@@ -58,9 +57,4 @@ const Analyser = () => {
   );
 };
 
-document.addEventListener('DOMContentLoaded', () => {
-  ReactDOM.render(
-    <Analyser />,
-    document.body.appendChild(document.createElement('div')),
-  );
-});
+export default Analyser;
