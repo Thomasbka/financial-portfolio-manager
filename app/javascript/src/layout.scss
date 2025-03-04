@@ -1,0 +1,61 @@
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.app-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.main-area {
+  flex: 1;
+  display: flex;
+}
+
+.sidebar {
+  width: 180px;
+  min-width: 160px;
+  background-color: #5c4b45;
+  border-right: 1px solid #ddd;
+}
+
+.content-area {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.footer {
+  background-color: #6c757d;
+  color: #fff;
+  text-align: center;
+}
+
+.icon-nav {
+  display: flex;
+  gap: 5px;
+
+  .nav-link {
+    font-size: 18px;
+    color: #007bff;
+
+    &:hover {
+      color: #0056b3;
+    }
+  }
+}
+
+.user-info {
+  font-size: 14px;
+  font-weight: 500;
+  text-align: right;
+}
+
+@media (max-width: 768px) {
+  .sidebar, .navbar-brand {
+    display: none;
+  }
+}

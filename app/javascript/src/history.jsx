@@ -6,7 +6,7 @@ import Layout from './layout';
 const History = () => (
   <Router>
     <Layout>
-      <h1>History page</h1>
+      <h2 className="text-uppercase text-center">History</h2>
     </Layout>
   </Router>
 )
