@@ -216,11 +216,5 @@ const Portfolio = () => {
   );
 };
 
-document.addEventListener('DOMContentLoaded', () => {
-  ReactDOM.render(
-    <Portfolio />,
-    document.body.appendChild(document.createElement('div'))
-  );
-});
 
 export default Portfolio;

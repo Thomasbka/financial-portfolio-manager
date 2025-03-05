@@ -43,11 +43,4 @@ const Tracker = () => {
   );
 };
 
-document.addEventListener('DOMContentLoaded', () => {
-  ReactDOM.render(
-    <Tracker />,
-    document.body.appendChild(document.createElement('div'))
-  );
-});
-
 export default Tracker;
