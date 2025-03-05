@@ -1,8 +1,10 @@
 module Api
   class PositionsController < ApplicationController
+    before_action :require_login
+
     def index
-      @positions = Position.all
-      render json: @positions
+      positions = Position.where(user_id: @current_user.id)
+      render json: positions
     end
 
     def show

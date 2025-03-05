@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import ReactDOM from 'react-dom';
 import Layout from './layout';
+import Portfolio from './portfolio';
 import './dashboard.scss';
 
-  // These states just simulate summary data fetched from each tab's backend/API.
-  // Once the backend has been set up I will be able to fetch the dynamic data instead.
 const Dashboard = () => {
   const [trackerSummary, setTrackerSummary] = useState({ recentChanges: 'Loading...' });
   const [historySummary, setHistorySummary] = useState({ performance: 'Loading...' });
@@ -14,12 +12,29 @@ const Dashboard = () => {
   });
 
   useEffect(() => {
-    setTimeout(() => {
-      setTrackerSummary({ recentChanges: 'Your portfolio increased by 2% today.' });
-      setHistorySummary({ performance: 'Overall trade profit: $500.' });
-      setPortfolioSummary({ holdings: 'You hold 5 stocks.', totalValue: 15000 });
-    }, 1000);
+    Promise.all([
+      fetch('/api/trackers').then(res => res.json()),
+      fetch('/api/positions').then(res => res.json()),
+    ])
+      .then(([trackerData, positionData]) => {
+        setTrackerSummary({
+          recentChanges: trackerData.length > 0
+            ? trackerData[0].sentiment
+            : 'No tracker data'
+        });
+        setPortfolioSummary({
+          holdings: positionData.length > 0
+            ? `You hold ${positionData.length} stocks.`
+            : 'No positions',
+          totalValue: positionData.reduce((total, pos) => total + pos.current_price * pos.quantity, 0)
+        });
+        setHistorySummary({ performance: 'Calculated performance data here.' });
+      })
+      .catch((error) => {
+        console.error('Error fetching data:', error);
+      });
   }, []);
+  
 
   return (
     <Layout>
