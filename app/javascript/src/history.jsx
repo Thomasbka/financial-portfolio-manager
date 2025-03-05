@@ -104,11 +104,5 @@ const History = () => {
   );
 };
 
-document.addEventListener('DOMContentLoaded', () => {
-  ReactDOM.render(
-    <History />,
-    document.body.appendChild(document.createElement('div'))
-  );
-});
 
 export default History;

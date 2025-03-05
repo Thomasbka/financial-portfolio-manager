@@ -43,11 +43,5 @@ const Dashboard = () => {
   );
 };
 
-document.addEventListener('DOMContentLoaded', () => {
-  ReactDOM.render(
-    <Dashboard />,
-    document.body.appendChild(document.createElement('div'))
-  );
-});
 
 export default Dashboard;

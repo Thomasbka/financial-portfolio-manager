@@ -33,7 +33,7 @@ function App() {
         <Route path="/portfolio" component={Portfolio} />
         <Route path="/tracker" component={Tracker} />
       </Switch>
-    </Router>
+    </Router> 
   );
 }
 
