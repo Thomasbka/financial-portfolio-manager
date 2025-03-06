@@ -3,17 +3,16 @@ module Api
     before_action :require_login
 
     def index
-      positions = Position.where(user_id: @current_user.id)
-      render json: positions
+      render json: @current_user.positions
     end
 
     def show
-      @position = Position.find(params[:id])
-      render json: @position
+      position = @current_user.positions.find(params[:id])
+      render json: position
     end
 
     def create
-      @position = Position.new(position_params)
+      @position = @current_user.positions.new(transformed_params)
       if @position.save
         render json: @position, status: :created
       else
@@ -22,24 +21,42 @@ module Api
     end
 
     def update
-      @position = Position.find(params[:id])
-      if @position.update(position_params)
-        render json: @position
+      position = @current_user.positions.find(params[:id])
+      if position.update(transformed_params)
+        render json: position
       else
-        render json: @position.errors, status: :unprocessable_entity
+        render json: position.errors, status: :unprocessable_entity
       end
     end
 
     def destroy
-      @position = Position.find(params[:id])
-      @position.destroy
+      position = @current_user.positions.find(params[:id])
+      position.destroy
       head :no_content
     end
 
     private
 
-    def position_params
-      params.require(:position).permit(:user_id, :symbol, :buy_price, :quantity, :current_price)
+    def transformed_params
+      raw = params.require(:position).permit(
+        :ticker,
+        :buyPrice,
+        :quantity,
+        :currentPrice,
+        :name,
+        :dividendYield,
+        :buyDate
+      )
+
+      {
+        symbol:         raw[:ticker],
+        buy_price:      raw[:buyPrice],
+        quantity:       raw[:quantity],
+        current_price:  raw[:currentPrice],
+        name:           raw[:name],
+        dividend_yield: raw[:dividendYield],
+        buy_date:       raw[:buyDate]
+      }
     end
   end
 end

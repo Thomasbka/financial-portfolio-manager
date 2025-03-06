@@ -9,6 +9,10 @@ Rails.application.routes.draw do
     resources :trackers
   end
 
+  namespace :api do
+    get 'stocks/fetch', to: 'stocks#fetch'
+  end
+
   root to: 'static_pages#dashboard'
 
   get '*path', to: 'static_pages#dashboard', constraints: ->(req) {
