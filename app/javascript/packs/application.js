@@ -14,6 +14,7 @@ import Analyser from "@src/analyser.jsx";
 import History from "@src/history.jsx";
 import Portfolio from "@src/portfolio.jsx";
 import Tracker from "@src/tracker.jsx";
+import Login from "@src/login.jsx";
 
 import "bootstrap"; 
 import "bootstrap/dist/css/bootstrap.css";
@@ -27,7 +28,8 @@ function App() {
   return (
     <Router>
       <Switch>
-        <Route exact path="/" component={Dashboard} />
+        <Route path="/login" component={Login} />
+        <Route exact path={["/", "/dashboard"]} component={Dashboard} />
         <Route path="/analyser" component={Analyser} />
         <Route path="/history" component={History} />
         <Route path="/portfolio" component={Portfolio} />
@@ -36,6 +38,7 @@ function App() {
     </Router> 
   );
 }
+
 
 document.addEventListener("DOMContentLoaded", () => {
   ReactDOM.render(<App />, document.getElementById("root"));

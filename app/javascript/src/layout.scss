@@ -28,19 +28,13 @@ body {
   overflow-y: auto;
 }
 
-.footer {
-  background-color: #6c757d;
-  color: #fff;
-  text-align: center;
-}
-
 .icon-nav {
   display: flex;
   gap: 5px;
 
   .nav-link {
     font-size: 18px;
-    color: #007bff;
+    color: #3e464f;
 
     &:hover {
       color: #0056b3;
@@ -52,6 +46,12 @@ body {
   font-size: 14px;
   font-weight: 500;
   text-align: right;
+}
+
+.footer {
+  background-color: #6c757d;
+  color: #fff;
+  text-align: center;
 }
 
 @media (max-width: 768px) {
