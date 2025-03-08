@@ -10,6 +10,7 @@
     "@babel/plugin-proposal-private-methods": "^7.18.6",
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "@babel/preset-react": "^7.26.3",
+    "@polygon.io/client-js": "^7.4.0",
     "@popperjs/core": "^2.11.8",
     "@rails/actioncable": "^6.0.0",
     "@rails/activestorage": "^6.0.0",

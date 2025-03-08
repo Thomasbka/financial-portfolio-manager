@@ -7,7 +7,6 @@ const Layout = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
-    // Handle responsive layout
     const handleResize = () => {
       setIsMobile(window.innerWidth < 992);
       if (window.innerWidth >= 992) {
@@ -18,7 +17,6 @@ const Layout = ({ children }) => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Fetch current user on mount
   useEffect(() => {
     fetch('/logged_in')
       .then(res => res.json())
