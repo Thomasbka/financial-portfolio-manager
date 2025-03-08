@@ -5,22 +5,23 @@ import './portfolio.scss';
 const Modal = ({ show, onClose, investment, onSell }) => {
   if (!show || !investment) return null;
 
+  const totalReturn = (
+    (investment.currentPrice - investment.buyPrice) * investment.quantity +
+    (investment.dividendYield / 100) * investment.buyPrice * investment.quantity
+  ).toFixed(2);
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <h3>{investment.ticker} - {investment.name}</h3>
+        <h3>
+          {investment.ticker} - {investment.name}
+        </h3>
         <p><strong>Buy Price:</strong> ${investment.buyPrice}</p>
         <p><strong>Quantity:</strong> {investment.quantity}</p>
         <p><strong>Current Price:</strong> ${investment.currentPrice}</p>
         <p><strong>Dividend Yield:</strong> {investment.dividendYield}%</p>
-        <p>
-          <strong>Total Return:</strong> ${
-            (
-              (investment.currentPrice - investment.buyPrice) * investment.quantity +
-              ((investment.dividendYield / 100) * investment.buyPrice * investment.quantity)
-            ).toFixed(2)
-          }
-        </p>
+        <p><strong>Total Return:</strong> ${totalReturn}</p>
+
         <button className="sell-button" onClick={() => { onSell(); onClose(); }}>
           SELL
         </button>
@@ -38,19 +39,32 @@ const Portfolio = () => {
     buyPrice: '',
     buyDate: '',
   });
-
   const [suggestions, setSuggestions] = useState([]);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
   const [selectedInvestment, setSelectedInvestment] = useState(null);
   const [showModal, setShowModal] = useState(false);
 
-  console.log("[DEBUG] ALPHA_VANTAGE_API_KEY:", process.env.ALPHA_VANTAGE_API_KEY);
+  console.log('[DEBUG] ALPHA_VANTAGE_API_KEY:', process.env.ALPHA_VANTAGE_API_KEY);
 
   useEffect(() => {
     fetch('/api/positions')
-      .then(res => res.json())
-      .then(data => setInvestments(data))
-      .catch(err => console.error("Error fetching positions:", err));
+      .then((res) => res.json())
+      .then((serverPositions) => {
+        const normalized = serverPositions.map((pos) => ({
+          id: pos.id,
+          ticker: pos.symbol,
+          buyPrice: parseFloat(pos.buy_price) || 0,
+          quantity: parseInt(pos.quantity, 10) || 0,
+          currentPrice: parseFloat(pos.current_price) || 0,
+          name: pos.name || '',
+          dividendYield: parseFloat(pos.dividend_yield) || 0,
+          buyDate: pos.buy_date || '',
+        }));
+
+        setInvestments(normalized);
+      })
+      .catch((err) => console.error('Error fetching positions:', err));
   }, []);
 
   useEffect(() => {
@@ -64,17 +78,24 @@ const Portfolio = () => {
       setSuggestions([]);
       return;
     }
-
     try {
       const apiKey = process.env.ALPHA_VANTAGE_API_KEY || '';
-      const url = `https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords=${encodeURIComponent(query)}&apikey=${apiKey}`;
+      const url = `https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords=${encodeURIComponent(
+        query
+      )}&apikey=${apiKey}`;
 
       console.log('[DEBUG] Symbol Search URL:', url);
       const resp = await fetch(url, { headers: { Accept: 'application/json' } });
       if (!resp.ok) throw new Error('Suggestion fetch failed');
-      
+
       const data = await resp.json();
       console.log('[DEBUG] Symbol Search Response:', data);
+
+      if (data.Note || data.Information) {
+        console.warn('Alpha Vantage rate-limited or no data for that search. Data:', data);
+        setSuggestions([]);
+        return;
+      }
 
       const bestMatches = data.bestMatches || [];
       if (!bestMatches.length) {
@@ -82,27 +103,27 @@ const Portfolio = () => {
         return;
       }
 
-      const mapped = bestMatches.map(match => ({
+      const mapped = bestMatches.map((match) => ({
         ticker: match['1. symbol'],
-        name: match['2. name']
+        name: match['2. name'],
       }));
       setSuggestions(mapped);
     } catch (error) {
-      console.error("fetchSuggestions error:", error);
+      console.error('fetchSuggestions error:', error);
       setSuggestions([]);
     }
   }
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setNewInvestment(prev => ({ ...prev, [name]: value }));
+    setNewInvestment((prev) => ({ ...prev, [name]: value }));
     if (name === 'ticker') {
       fetchSuggestions(value.trim());
     }
   };
 
   const handleSuggestionClick = (sugg) => {
-    setNewInvestment(prev => ({ ...prev, ticker: sugg.ticker }));
+    setNewInvestment((prev) => ({ ...prev, ticker: sugg.ticker }));
     setSuggestions([]);
   };
 
@@ -111,13 +132,34 @@ const Portfolio = () => {
 
     try {
       const apiKey = process.env.ALPHA_VANTAGE_API_KEY || '';
-      const globalQuoteUrl = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${encodeURIComponent(symbol)}&apikey=${apiKey}`;
+
+      const globalQuoteUrl = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${encodeURIComponent(
+        symbol
+      )}&apikey=${apiKey}`;
+      console.log('[DEBUG] fetchLiveData => GLOBAL_QUOTE URL:', globalQuoteUrl);
       const quoteRes = await fetch(globalQuoteUrl);
       const quoteData = await quoteRes.json();
+      console.log('[DEBUG] GLOBAL_QUOTE response for', symbol, ':', quoteData);
+
+      if (quoteData.Note || quoteData.Information) {
+        console.warn('Alpha Vantage rate-limit/no-data for symbol:', symbol, quoteData);
+        return { currentPrice: 0, dividendYield: 0, name: symbol.toUpperCase() };
+      }
       const price = parseFloat(quoteData['Global Quote']?.['05. price']) || 0;
-      const overviewUrl = `https://www.alphavantage.co/query?function=OVERVIEW&symbol=${encodeURIComponent(symbol)}&apikey=${apiKey}`;
+
+      const overviewUrl = `https://www.alphavantage.co/query?function=OVERVIEW&symbol=${encodeURIComponent(
+        symbol
+      )}&apikey=${apiKey}`;
+      console.log('[DEBUG] fetchLiveData => OVERVIEW URL:', overviewUrl);
       const overviewRes = await fetch(overviewUrl);
       const overviewData = await overviewRes.json();
+      console.log('[DEBUG] OVERVIEW response for', symbol, ':', overviewData);
+
+      if (overviewData.Note || overviewData.Information) {
+        console.warn('Alpha Vantage rate-limit/no-data (overview) for symbol:', symbol, overviewData);
+        return { currentPrice: price, dividendYield: 0, name: symbol.toUpperCase() };
+      }
+
       const divYield = parseFloat(overviewData['DividendYield']) || 0;
       const fullName = overviewData['Name'] || symbol.toUpperCase();
 
@@ -127,16 +169,19 @@ const Portfolio = () => {
         name: fullName,
       };
     } catch (err) {
-      console.error("fetchLiveData error:", err);
+      console.error('fetchLiveData error:', err);
       return { currentPrice: 0, dividendYield: 0, name: symbol.toUpperCase() };
     }
   }
 
   const addInvestment = async () => {
-    if (!newInvestment.ticker || !newInvestment.quantity || !newInvestment.buyPrice) return;
+    if (!newInvestment.ticker || !newInvestment.quantity || !newInvestment.buyPrice) {
+      return;
+    }
 
     const live = await fetchLiveData(newInvestment.ticker);
-    const investmentData = {
+
+    const localObj = {
       ticker: newInvestment.ticker.toUpperCase(),
       buyPrice: parseFloat(newInvestment.buyPrice),
       quantity: parseInt(newInvestment.quantity, 10),
@@ -144,6 +189,16 @@ const Portfolio = () => {
       currentPrice: live.currentPrice,
       dividendYield: live.dividendYield,
       name: live.name,
+    };
+
+    const payloadForServer = {
+      symbol: localObj.ticker,
+      buy_price: localObj.buyPrice,
+      quantity: localObj.quantity,
+      current_price: localObj.currentPrice,
+      name: localObj.name,
+      dividend_yield: localObj.dividendYield,
+      buy_date: localObj.buyDate,
     };
 
     const metaTag = document.querySelector('meta[name="csrf-token"]');
@@ -155,17 +210,29 @@ const Portfolio = () => {
         'Content-Type': 'application/json',
         'X-CSRF-Token': token,
       },
-      body: JSON.stringify({ position: investmentData }),
+      body: JSON.stringify({ position: payloadForServer }),
     })
-      .then(res => {
-        if (!res.ok) throw new Error("Error adding investment");
+      .then((res) => {
+        if (!res.ok) throw new Error('Error adding investment');
         return res.json();
       })
-      .then(created => {
-        setInvestments(prev => [...prev, created]);
+      .then((createdPos) => {
+        const normalized = {
+          id: createdPos.id,
+          ticker: createdPos.symbol,
+          buyPrice: parseFloat(createdPos.buy_price) || 0,
+          quantity: parseInt(createdPos.quantity, 10) || 0,
+          currentPrice: parseFloat(createdPos.current_price) || 0,
+          name: createdPos.name || '',
+          dividendYield: parseFloat(createdPos.dividend_yield) || 0,
+          buyDate: createdPos.buy_date || '',
+        };
+
+        setInvestments((prev) => [...prev, normalized]);
+
         setNewInvestment({ ticker: '', quantity: '', buyPrice: '', buyDate: '' });
       })
-      .catch(err => console.error("Error adding investment:", err));
+      .catch((err) => console.error('Error adding investment:', err));
   };
 
   const handleSellInvestment = (index) => {
@@ -175,14 +242,12 @@ const Portfolio = () => {
 
     fetch(`/api/positions/${inv.id}`, {
       method: 'DELETE',
-      headers: {
-        'X-CSRF-Token': token,
-      },
+      headers: { 'X-CSRF-Token': token },
     })
       .then(() => {
-        setInvestments(prev => prev.filter((_, i) => i !== index));
+        setInvestments((prev) => prev.filter((_, i) => i !== index));
       })
-      .catch(err => console.error("Error selling investment:", err));
+      .catch((err) => console.error('Error selling investment:', err));
   };
 
   const calculateTotalReturn = (inv) => {
@@ -201,12 +266,12 @@ const Portfolio = () => {
   return (
     <Layout>
       <div className="portfolio-container">
-        <h2 className="text-uppercase text-center portfolio-title">Portfolio</h2>
+        <h2 className="text-uppercase text-center portfolio-title">PORTFOLIO</h2>
         {isMobile ? (
           <div className="mobile-portfolio-list">
             {investments.map((inv, idx) => (
               <div
-                key={idx}
+                key={inv.id || idx}
                 className="mobile-portfolio-item"
                 onClick={() => openModal(inv, idx)}
               >
@@ -239,8 +304,9 @@ const Portfolio = () => {
                   const capGains = (
                     (inv.currentPrice - inv.buyPrice) * inv.quantity
                   ).toFixed(2);
+
                   return (
-                    <tr key={idx}>
+                    <tr key={inv.id || idx}>
                       <td>
                         <strong>{inv.ticker}</strong>
                         <br />

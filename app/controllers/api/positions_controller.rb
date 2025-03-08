@@ -39,23 +39,23 @@ module Api
 
     def transformed_params
       raw = params.require(:position).permit(
-        :ticker,
-        :buyPrice,
+        :symbol,
+        :buy_price,
         :quantity,
-        :currentPrice,
+        :current_price,
         :name,
-        :dividendYield,
-        :buyDate
+        :dividend_yield,
+        :buy_date
       )
-
+      
       {
-        symbol:         raw[:ticker],
-        buy_price:      raw[:buyPrice],
+        symbol:         raw[:symbol],
+        buy_price:      raw[:buy_price],
         quantity:       raw[:quantity],
-        current_price:  raw[:currentPrice],
+        current_price:  raw[:current_price],
         name:           raw[:name],
-        dividend_yield: raw[:dividendYield],
-        buy_date:       raw[:buyDate]
+        dividend_yield: raw[:dividend_yield],
+        buy_date:       raw[:buy_date]
       }
     end
   end
