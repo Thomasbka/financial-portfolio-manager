@@ -5,9 +5,10 @@ import './portfolio.scss';
 const DetailModal = ({ show, onClose, investment }) => {
   if (!show || !investment) return null;
 
-  const cumulativeDividend = investment.dividendPayments && investment.dividendPayments.length > 0
-    ? investment.dividendPayments.reduce((sum, dp) => sum + parseFloat(dp.amount || 0), 0)
-    : 0;
+  const cumulativeDividend = (investment.dividendPayments || []).reduce(
+    (sum, dp) => sum + parseFloat(dp.amount || 0),
+    0
+  );
 
   const totalReturn = (
     (investment.currentPrice - investment.buyPrice) * investment.quantity +
@@ -18,12 +19,10 @@ const DetailModal = ({ show, onClose, investment }) => {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={e => e.stopPropagation()}>
         <h3>{investment.ticker} - {investment.name}</h3>
-        <p><strong>Buy Price:</strong> ${investment.buyPrice}</p>
+        <p><strong>Buy Price:</strong> ${parseFloat(investment.buyPrice).toFixed(2)}</p>
         <p><strong>Quantity:</strong> {investment.quantity}</p>
         <p><strong>Current Price:</strong> ${investment.currentPrice}</p>
-        <p>
-          <strong>Cumulative Dividend:</strong> ${cumulativeDividend.toFixed(2)}
-        </p>
+        <p><strong>Cumulative Dividend:</strong> ${cumulativeDividend.toFixed(2)}</p>
         <p><strong>Total Return:</strong> ${totalReturn}</p>
         <button className="close-button" onClick={onClose}>Close</button>
       </div>
@@ -31,44 +30,77 @@ const DetailModal = ({ show, onClose, investment }) => {
   );
 };
 
-const EditModal = ({ show, onClose, investment, onUpdateTrade, onAddDividend }) => {
+const EditModal = ({
+  show,
+  onClose,
+  investment,
+  onUpdateTrade,
+  onSellTrade,
+  onAddDividend,
+  onDelete
+}) => {
   if (!show || !investment) return null;
 
-  const [activeTab, setActiveTab] = useState('trade'); // 'trade' or 'dividend'
-  const [tradeData, setTradeData] = useState({ newQuantity: '', newBuyPrice: '' });
+  const [activeTab, setActiveTab] = useState('trade');
+  const [tradeMode, setTradeMode] = useState('update');
+  const [buyData, setBuyData] = useState({ additionalQuantity: '' });
+  const [sellData, setSellData] = useState({ sellQuantity: '' });
   const [dividendData, setDividendData] = useState({ amount: '', paymentDate: '' });
 
   useEffect(() => {
     if (show) {
       setActiveTab('trade');
-      setTradeData({ newQuantity: '', newBuyPrice: '' });
+      setTradeMode('update');
+      setBuyData({ additionalQuantity: '' });
+      setSellData({ sellQuantity: '' });
       setDividendData({ amount: '', paymentDate: '' });
     }
   }, [show]);
 
-  const handleTradeSubmit = () => {
-    if (onUpdateTrade) {
-      onUpdateTrade(investment.id, {
-        newQuantity: parseInt(tradeData.newQuantity, 10),
-        newBuyPrice: parseFloat(tradeData.newBuyPrice)
-      });
+  const handleBuySubmit = () => {
+    if (!onUpdateTrade) return;
+    const additionalQty = parseInt(buyData.additionalQuantity, 10);
+    if (isNaN(additionalQty) || additionalQty <= 0) return;
+    onUpdateTrade(investment.id, {
+      newQuantity: additionalQty,
+    });
+    onClose();
+  };
+
+  const handleSellSubmit = () => {
+    if (!onSellTrade) return;
+    const sellQty = parseInt(sellData.sellQuantity, 10);
+    if (isNaN(sellQty) || sellQty <= 0 || sellQty > investment.quantity) {
+      alert("Invalid sell quantity.");
+      return;
     }
+    onSellTrade(investment.id, { sellQuantity: sellQty });
     onClose();
   };
 
   const handleDividendSubmit = () => {
-    if (onAddDividend) {
-      onAddDividend(investment.id, {
-        amount: parseFloat(dividendData.amount),
-        paymentDate: dividendData.paymentDate
-      });
-    }
+    if (!onAddDividend) return;
+    const amount = parseFloat(dividendData.amount);
+    if (isNaN(amount) || amount <= 0 || !dividendData.paymentDate) return;
+    onAddDividend(investment.id, {
+      amount,
+      paymentDate: dividendData.paymentDate
+    });
     onClose();
   };
 
-  const cumulativeDividend = investment.dividendPayments && investment.dividendPayments.length > 0
-    ? investment.dividendPayments.reduce((sum, dp) => sum + parseFloat(dp.amount || 0), 0)
-    : 0;
+  const handleDelete = () => {
+    if (!onDelete) return;
+    if (window.confirm("Are you sure you want to delete this position?")) {
+      onDelete(investment.id);
+      onClose();
+    }
+  };
+
+  const cumulativeDividend = (investment.dividendPayments || []).reduce(
+    (sum, dp) => sum + parseFloat(dp.amount || 0),
+    0
+  );
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -88,30 +120,76 @@ const EditModal = ({ show, onClose, investment, onUpdateTrade, onAddDividend }) 
             Dividend
           </button>
         </div>
+
         {activeTab === 'trade' && (
           <div className="trade-form">
-            <p>Update Trade:</p>
-            <input
-              type="number"
-              placeholder="New Total Quantity"
-              value={tradeData.newQuantity}
-              onChange={e => setTradeData({ ...tradeData, newQuantity: e.target.value })}
-            />
-            <input
-              type="number"
-              placeholder="New Average Buy Price"
-              value={tradeData.newBuyPrice}
-              onChange={e => setTradeData({ ...tradeData, newBuyPrice: e.target.value })}
-            />
-            <button onClick={handleTradeSubmit}>Update Trade</button>
+            <div className="trade-mode-selector">
+              <label>
+                <input
+                  type="radio"
+                  name="tradeMode"
+                  value="update"
+                  checked={tradeMode === 'update'}
+                  onChange={() => setTradeMode('update')}
+                />
+                Buy More
+              </label>
+              <label>
+                <input
+                  type="radio"
+                  name="tradeMode"
+                  value="sell"
+                  checked={tradeMode === 'sell'}
+                  onChange={() => setTradeMode('sell')}
+                />
+                Sell Shares
+              </label>
+            </div>
+
+            {tradeMode === 'update' && (
+              <>
+                <p>Buy Additional Shares:</p>
+                <input
+                  type="number"
+                  placeholder="Additional Quantity"
+                  value={buyData.additionalQuantity}
+                  onChange={e => setBuyData({ additionalQuantity: e.target.value })}
+                />
+                <p>Buy Price automatically set to current price: ${investment.currentPrice}</p>
+                <button onClick={handleBuySubmit}>Buy More</button>
+              </>
+            )}
+
+            {tradeMode === 'sell' && (
+              <>
+                <p>Sell Shares:</p>
+                <input
+                  type="number"
+                  placeholder="Quantity to Sell"
+                  value={sellData.sellQuantity}
+                  onChange={e => setSellData({ sellQuantity: e.target.value })}
+                />
+                <p>Sell Price automatically set to current price: ${investment.currentPrice}</p>
+                <button onClick={handleSellSubmit}>Sell Shares</button>
+              </>
+            )}
+
+            <button
+              className="delete-button"
+              onClick={handleDelete}
+              style={{ marginTop: '1em', backgroundColor: '#dc3545' }}
+            >
+              Delete Position
+            </button>
           </div>
         )}
+
         {activeTab === 'dividend' && (
           <div className="dividend-form">
-            <p>Add Dividend Payment:</p>
+            <p>Add Dividend Payment (Total):</p>
             <input
               type="number"
-              placeholder="Dividend Amount (Total)"
+              placeholder="Dividend Amount"
               value={dividendData.amount}
               onChange={e => setDividendData({ ...dividendData, amount: e.target.value })}
             />
@@ -122,12 +200,13 @@ const EditModal = ({ show, onClose, investment, onUpdateTrade, onAddDividend }) 
               onChange={e => setDividendData({ ...dividendData, paymentDate: e.target.value })}
             />
             <button onClick={handleDividendSubmit}>Add Dividend</button>
+
             <div className="dividend-history">
               <h4>Dividend History:</h4>
               {investment.dividendPayments && investment.dividendPayments.length > 0 ? (
                 <ul>
-                  {investment.dividendPayments.map((dp, index) => (
-                    <li key={index}>
+                  {investment.dividendPayments.map((dp, idx) => (
+                    <li key={idx}>
                       ${parseFloat(dp.amount).toFixed(2)} on {dp.paymentDate}
                     </li>
                   ))}
@@ -141,6 +220,7 @@ const EditModal = ({ show, onClose, investment, onUpdateTrade, onAddDividend }) 
             </div>
           </div>
         )}
+
         <button className="close-button" onClick={onClose}>Cancel</button>
       </div>
     </div>
@@ -155,14 +235,14 @@ const Portfolio = () => {
     buyPrice: '',
     buyDate: '',
   });
-
   const [suggestions, setSuggestions] = useState([]);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
   const [selectedInvestment, setSelectedInvestment] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
 
-  console.log('[DEBUG] ALPHA_VANTAGE_API_KEY:', process.env.ALPHA_VANTAGE_API_KEY);
+  const initialBalance = 10500;
 
   useEffect(() => {
     fetch('/api/positions')
@@ -177,18 +257,34 @@ const Portfolio = () => {
           name: pos.name || '',
           dividend: parseFloat(pos.dividend_yield) || 0,
           buyDate: pos.buy_date || '',
-          dividendPayments: pos.dividend_payments ? JSON.parse(pos.dividend_payments) : []
+          dividendPayments: pos.dividend_payments ? JSON.parse(pos.dividend_payments) : [],
+          realizedPL: parseFloat(pos.realized_pl) || 0
         }));
         setInvestments(normalized);
       })
       .catch(err => console.error('Error fetching positions:', err));
   }, []);
 
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  const totalRealizedPL = investments.reduce(
+    (sum, inv) => sum + (inv.realizedPL || 0),
+    0
+  );
+
+  function calculateTotalReturn(inv) {
+    const capitalGains = (inv.currentPrice - inv.buyPrice) * inv.quantity;
+    const cumulativeDividend = (inv.dividendPayments || []).reduce(
+      (sum, dp) => sum + parseFloat(dp.amount || 0),
+      0
+    );
+    return capitalGains + cumulativeDividend;
+  }
+
+  const totalUnrealizedPL = investments.reduce(
+    (sum, inv) => sum + calculateTotalReturn(inv),
+    0
+  );
+
+  const accountBalance = initialBalance + totalRealizedPL + totalUnrealizedPL;
 
   async function fetchSuggestions(query) {
     if (query.length < 2) {
@@ -198,24 +294,18 @@ const Portfolio = () => {
     try {
       const apiKey = process.env.ALPHA_VANTAGE_API_KEY || '';
       const url = `https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords=${encodeURIComponent(query)}&apikey=${apiKey}`;
-      console.log('[DEBUG] Symbol Search URL:', url);
       const resp = await fetch(url, { headers: { Accept: 'application/json' } });
       if (!resp.ok) throw new Error('Suggestion fetch failed');
       const data = await resp.json();
-      console.log('[DEBUG] Symbol Search Response:', data);
       if (data.Note || data.Information) {
-        console.warn('Alpha Vantage rate-limited or no data for that search.', data);
+        console.warn('Alpha Vantage rate-limited or no data.', data);
         setSuggestions([]);
         return;
       }
       const bestMatches = data.bestMatches || [];
-      if (!bestMatches.length) {
-        setSuggestions([]);
-        return;
-      }
-      const mapped = bestMatches.map(match => ({
-        ticker: match['1. symbol'],
-        name: match['2. name']
+      const mapped = bestMatches.map(m => ({
+        ticker: m['1. symbol'],
+        name: m['2. name']
       }));
       setSuggestions(mapped);
     } catch (error) {
@@ -224,56 +314,24 @@ const Portfolio = () => {
     }
   }
 
-  const handleInputChange = (e) => {
+  function handleInputChange(e) {
     const { name, value } = e.target;
     setNewInvestment(prev => ({ ...prev, [name]: value }));
     if (name === 'ticker') {
       fetchSuggestions(value.trim());
     }
-  };
-
-  const handleSuggestionClick = (sugg) => {
-    setNewInvestment(prev => ({ ...prev, ticker: sugg.ticker }));
-    setSuggestions([]);
-  };
-
-  async function fetchLiveData(symbol) {
-    if (!symbol) return { currentPrice: 0, dividend: 0, name: 'Unknown' };
-    try {
-      const apiKey = process.env.ALPHA_VANTAGE_API_KEY || '';
-      const globalQuoteUrl = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${encodeURIComponent(symbol)}&apikey=${apiKey}`;
-      console.log('[DEBUG] GLOBAL_QUOTE URL:', globalQuoteUrl);
-      const quoteRes = await fetch(globalQuoteUrl);
-      const quoteData = await quoteRes.json();
-      console.log('[DEBUG] GLOBAL_QUOTE response for', symbol, ':', quoteData);
-      if (quoteData.Note || quoteData.Information) {
-        console.warn('Alpha Vantage rate-limit/no-data for symbol:', symbol, quoteData);
-        return { currentPrice: 0, dividend: 0, name: symbol.toUpperCase() };
-      }
-      const price = parseFloat(quoteData['Global Quote']?.['05. price']) || 0;
-
-      const overviewUrl = `https://www.alphavantage.co/query?function=OVERVIEW&symbol=${encodeURIComponent(symbol)}&apikey=${apiKey}`;
-      console.log('[DEBUG] OVERVIEW URL:', overviewUrl);
-      const overviewRes = await fetch(overviewUrl);
-      const overviewData = await overviewRes.json();
-      console.log('[DEBUG] OVERVIEW response for', symbol, ':', overviewData);
-      if (overviewData.Note || overviewData.Information) {
-        console.warn('Alpha Vantage rate-limit/no-data (overview) for symbol:', symbol, overviewData);
-        return { currentPrice: price, dividend: 0, name: symbol.toUpperCase() };
-      }
-      const fullName = overviewData['Name'] || symbol.toUpperCase();
-      return {
-        currentPrice: price,
-        dividend: 0,
-        name: fullName,
-      };
-    } catch (err) {
-      console.error('fetchLiveData error:', err);
-      return { currentPrice: 0, dividend: 0, name: symbol.toUpperCase() };
-    }
   }
 
-  const addInvestment = async () => {
+  function handleSuggestionClick(sugg) {
+    setNewInvestment(prev => ({ ...prev, ticker: sugg.ticker }));
+    setSuggestions([]);
+  }
+
+  async function fetchLiveData(symbol) {
+    return { currentPrice: 100, dividend: 0, name: symbol.toUpperCase() };
+  }
+
+  async function addInvestment() {
     if (!newInvestment.ticker || !newInvestment.quantity || !newInvestment.buyPrice) return;
     const live = await fetchLiveData(newInvestment.ticker);
     const localObj = {
@@ -284,7 +342,8 @@ const Portfolio = () => {
       currentPrice: live.currentPrice,
       dividend: 0,
       name: live.name,
-      dividendPayments: []
+      dividendPayments: [],
+      realizedPL: 0
     };
     const payloadForServer = {
       symbol: localObj.ticker,
@@ -294,15 +353,15 @@ const Portfolio = () => {
       name: localObj.name,
       dividend_yield: localObj.dividend,
       buy_date: localObj.buyDate,
-      dividend_payments: JSON.stringify(localObj.dividendPayments)
+      dividend_payments: JSON.stringify(localObj.dividendPayments),
+      realized_pl: 0
     };
-    const metaTag = document.querySelector('meta[name="csrf-token"]');
-    const token = metaTag ? metaTag.getAttribute('content') : '';
+    const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
     fetch('/api/positions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-CSRF-Token': token,
+        'X-CSRF-Token': csrf,
       },
       body: JSON.stringify({ position: payloadForServer }),
     })
@@ -320,34 +379,40 @@ const Portfolio = () => {
           name: createdPos.name || '',
           dividend: parseFloat(createdPos.dividend_yield) || 0,
           buyDate: createdPos.buy_date || '',
-          dividendPayments: createdPos.dividend_payments ? JSON.parse(createdPos.dividend_payments) : []
+          dividendPayments: createdPos.dividend_payments ? JSON.parse(createdPos.dividend_payments) : [],
+          realizedPL: parseFloat(createdPos.realized_pl) || 0
         };
         setInvestments(prev => [...prev, normalized]);
         setNewInvestment({ ticker: '', quantity: '', buyPrice: '', buyDate: '' });
       })
       .catch(err => console.error('Error adding investment:', err));
-  };
+  }
 
-  const updateTrade = (positionId, updatedData) => {
-    const metaTag = document.querySelector('meta[name="csrf-token"]');
-    const token = metaTag ? metaTag.getAttribute('content') : '';
+  function updateTrade(positionId, { newQuantity, newBuyPrice }) {
+    const inv = investments.find(i => i.id === positionId);
+    if (!inv) return;
+
+    const oldQty = inv.quantity;
+    const oldBuyPrice = inv.buyPrice;
+    const currentPrice = inv.currentPrice;
+    const totalQty = oldQty + newQuantity;
+    const avgBuyPrice = ((oldQty * oldBuyPrice) + (newQuantity * currentPrice)) / totalQty;
+
+    const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
     fetch(`/api/positions/${positionId}`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
-        'X-CSRF-Token': token,
+        'X-CSRF-Token': csrf,
       },
       body: JSON.stringify({
         position: {
-          quantity: updatedData.newQuantity,
-          buy_price: updatedData.newBuyPrice,
-        },
+          quantity: totalQty,
+          buy_price: avgBuyPrice
+        }
       }),
     })
-      .then(res => {
-        if (!res.ok) throw new Error('Error updating trade');
-        return res.json();
-      })
+      .then(r => r.json())
       .then(updatedPos => {
         const normalized = {
           id: updatedPos.id,
@@ -358,42 +423,39 @@ const Portfolio = () => {
           name: updatedPos.name || '',
           dividend: parseFloat(updatedPos.dividend_yield) || 0,
           buyDate: updatedPos.buy_date || '',
-          dividendPayments: updatedPos.dividend_payments ? JSON.parse(updatedPos.dividend_payments) : []
+          dividendPayments: updatedPos.dividend_payments ? JSON.parse(updatedPos.dividend_payments) : [],
+          realizedPL: parseFloat(updatedPos.realized_pl) || 0
         };
         setInvestments(prev =>
-          prev.map(inv => (inv.id === normalized.id ? normalized : inv))
+          prev.map(i => (i.id === normalized.id ? normalized : i))
         );
       })
       .catch(err => console.error('Error updating trade:', err));
-  };
+  }
 
-  const addDividend = (positionId, dividendInfo) => {
-    const investment = investments.find(inv => inv.id === positionId);
-    if (!investment) return;
-    const updatedDividends = investment.dividendPayments
-      ? [...investment.dividendPayments, dividendInfo]
-      : [dividendInfo];
+  function sellTrade(positionId, { sellQuantity }) {
+    const inv = investments.find(i => i.id === positionId);
+    if (!inv) return;
 
-    const cumulativeDividend = updatedDividends.reduce((sum, dp) => sum + parseFloat(dp.amount || 0), 0);
-    const metaTag = document.querySelector('meta[name="csrf-token"]');
-    const token = metaTag ? metaTag.getAttribute('content') : '';
+    const profit = (inv.currentPrice - inv.buyPrice) * sellQuantity;
+    const newQty = inv.quantity - sellQuantity;
+    const newRealized = (inv.realizedPL || 0) + profit;
+
+    const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
     fetch(`/api/positions/${positionId}`, {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
-        'X-CSRF-Token': token,
+        'X-CSRF-Token': csrf,
       },
       body: JSON.stringify({
         position: {
-          dividend_payments: JSON.stringify(updatedDividends),
-          dividend_yield: cumulativeDividend
-        },
+          quantity: newQty,
+          realized_pl: newRealized
+        }
       }),
     })
-      .then(res => {
-        if (!res.ok) throw new Error('Error updating dividend');
-        return res.json();
-      })
+      .then(r => r.json())
       .then(updatedPos => {
         const normalized = {
           id: updatedPos.id,
@@ -404,53 +466,87 @@ const Portfolio = () => {
           name: updatedPos.name || '',
           dividend: parseFloat(updatedPos.dividend_yield) || 0,
           buyDate: updatedPos.buy_date || '',
-          dividendPayments: updatedPos.dividend_payments ? JSON.parse(updatedPos.dividend_payments) : []
+          dividendPayments: updatedPos.dividend_payments ? JSON.parse(updatedPos.dividend_payments) : [],
+          realizedPL: parseFloat(updatedPos.realized_pl) || 0
         };
         setInvestments(prev =>
-          prev.map(inv => (inv.id === normalized.id ? normalized : inv))
+          prev.map(i => (i.id === normalized.id ? normalized : i))
+        );
+      })
+      .catch(err => console.error('Error selling shares:', err));
+  }
+
+  function deletePosition(positionId) {
+    const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+    fetch(`/api/positions/${positionId}`, {
+      method: 'DELETE',
+      headers: { 'X-CSRF-Token': csrf },
+    })
+      .then(() => {
+        setInvestments(prev => prev.filter(i => i.id !== positionId));
+      })
+      .catch(err => console.error('Error deleting position:', err));
+  }
+
+  function addDividend(positionId, dividendInfo) {
+    const inv = investments.find(i => i.id === positionId);
+    if (!inv) return;
+
+    const updated = inv.dividendPayments
+      ? [...inv.dividendPayments, dividendInfo]
+      : [dividendInfo];
+    const cumDiv = updated.reduce((sum, dp) => sum + parseFloat(dp.amount || 0), 0);
+
+    const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+    fetch(`/api/positions/${positionId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': csrf
+      },
+      body: JSON.stringify({
+        position: {
+          dividend_payments: JSON.stringify(updated),
+          dividend_yield: cumDiv
+        }
+      }),
+    })
+      .then(r => r.json())
+      .then(updatedPos => {
+        const normalized = {
+          id: updatedPos.id,
+          ticker: updatedPos.symbol,
+          buyPrice: parseFloat(updatedPos.buy_price) || 0,
+          quantity: parseInt(updatedPos.quantity, 10) || 0,
+          currentPrice: parseFloat(updatedPos.current_price) || 0,
+          name: updatedPos.name || '',
+          dividend: parseFloat(updatedPos.dividend_yield) || 0,
+          buyDate: updatedPos.buy_date || '',
+          dividendPayments: updatedPos.dividend_payments ? JSON.parse(updatedPos.dividend_payments) : [],
+          realizedPL: parseFloat(updatedPos.realized_pl) || 0
+        };
+        setInvestments(prev =>
+          prev.map(i => (i.id === normalized.id ? normalized : i))
         );
       })
       .catch(err => console.error('Error updating dividend:', err));
-  };
+  }
 
-  const handleSellInvestment = (index) => {
-    const inv = investments[index];
-    const metaTag = document.querySelector('meta[name="csrf-token"]');
-    const token = metaTag ? metaTag.getAttribute('content') : '';
-    fetch(`/api/positions/${inv.id}`, {
-      method: 'DELETE',
-      headers: { 'X-CSRF-Token': token },
-    })
-      .then(() => {
-        setInvestments(prev => prev.filter((_, i) => i !== index));
-      })
-      .catch(err => console.error('Error selling investment:', err));
-  };
-
-  const calculateTotalReturn = (inv) => {
-    const capitalGains = (inv.currentPrice - inv.buyPrice) * inv.quantity;
-    const cumulativeDividend = inv.dividendPayments
-      ? inv.dividendPayments.reduce((sum, dp) => sum + parseFloat(dp.amount || 0), 0)
-      : 0;
-    return capitalGains + cumulativeDividend;
-  };
-
-  const totalUnrealizedPL = investments.reduce((sum, inv) => sum + calculateTotalReturn(inv), 0);
-
-  const openDetailModal = (inv, idx) => {
+  function openDetailModal(inv, idx) {
     setSelectedInvestment({ ...inv, index: idx });
     setShowDetailModal(true);
-  };
+  }
 
-  const openEditModal = (inv, idx) => {
+  function openEditModal(inv, idx) {
     setSelectedInvestment({ ...inv, index: idx });
     setShowEditModal(true);
-  };
+  }
 
   return (
     <Layout>
       <div className="portfolio-container">
         <h2 className="text-uppercase text-center portfolio-title">PORTFOLIO</h2>
+
         {isMobile ? (
           <div className="mobile-portfolio-list">
             {investments.map((inv, idx) => (
@@ -460,7 +556,9 @@ const Portfolio = () => {
                 onClick={() => openEditModal(inv, idx)}
               >
                 <span className="ticker"><strong>{inv.ticker}</strong></span>
-                <span className="total-return">${calculateTotalReturn(inv).toFixed(2)}</span>
+                <span className="total-return">
+                  ${calculateTotalReturn(inv).toFixed(2)}
+                </span>
               </div>
             ))}
           </div>
@@ -482,14 +580,14 @@ const Portfolio = () => {
               <tbody>
                 {investments.map((inv, idx) => {
                   const capGains = ((inv.currentPrice - inv.buyPrice) * inv.quantity).toFixed(2);
-                  const cumulativeDividend = inv.dividendPayments
-                    ? inv.dividendPayments.reduce((sum, d) => sum + parseFloat(d.amount || 0), 0)
-                    : 0;
+                  const cumulativeDividend = (inv.dividendPayments || []).reduce(
+                    (sum, d) => sum + parseFloat(d.amount || 0),
+                    0
+                  );
                   return (
                     <tr key={inv.id || idx}>
                       <td>
-                        <strong>{inv.ticker}</strong>
-                        <br />
+                        <strong>{inv.ticker}</strong><br />
                         <span className="stock-subtext">{inv.name}</span>
                       </td>
                       <td>${inv.buyPrice}</td>
@@ -499,7 +597,10 @@ const Portfolio = () => {
                       <td>${cumulativeDividend.toFixed(2)}</td>
                       <td>${calculateTotalReturn(inv).toFixed(2)}</td>
                       <td>
-                        <button className="sell-button" onClick={() => openEditModal(inv, idx)}>
+                        <button
+                          className="sell-button"
+                          onClick={() => openEditModal(inv, idx)}
+                        >
                           EDIT
                         </button>
                       </td>
@@ -508,15 +609,15 @@ const Portfolio = () => {
                 })}
               </tbody>
             </table>
-  
+
             <div className="profit-section">
               <p><strong>Unrealized P&L:</strong> ${totalUnrealizedPL.toFixed(2)}</p>
-              <p><strong>Realized P&L:</strong> $0 (Future feature)</p>
-              <p><strong>Account Balance:</strong> $</p>
+              <p><strong>Realized P&L:</strong> ${totalRealizedPL.toFixed(2)}</p>
+              <p><strong>Account Balance:</strong> ${accountBalance.toFixed(2)}</p>
             </div>
           </div>
         )}
-  
+
         <div className="investment-form">
           <h4 className="form-title">Add Investment:</h4>
           <div className="form-group">
@@ -567,22 +668,22 @@ const Portfolio = () => {
           </div>
         </div>
       </div>
-  
       <DetailModal
         show={showDetailModal}
         investment={selectedInvestment}
         onClose={() => setShowDetailModal(false)}
       />
-  
       <EditModal
         show={showEditModal}
         investment={selectedInvestment}
         onClose={() => setShowEditModal(false)}
         onUpdateTrade={updateTrade}
+        onSellTrade={sellTrade}
         onAddDividend={addDividend}
+        onDelete={deletePosition}
       />
     </Layout>
   );
 };
-  
+
 export default Portfolio;
