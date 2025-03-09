@@ -22,12 +22,36 @@ module Api
 
     def update
       position = @current_user.positions.find(params[:id])
-      if position.update(transformed_params)
+    
+      raw = params.require(:position).permit(
+        :symbol,
+        :buy_price,
+        :quantity,
+        :current_price,
+        :name,
+        :dividend_yield,
+        :buy_date,
+        :dividend_payments
+      )
+    
+      updates = {
+        symbol:            raw[:symbol]            || position.symbol,
+        buy_price:         raw[:buy_price]         || position.buy_price,
+        quantity:          raw[:quantity]          || position.quantity,
+        current_price:     raw[:current_price]     || position.current_price,
+        name:              raw[:name]              || position.name,
+        dividend_yield:    raw[:dividend_yield]    || position.dividend_yield,
+        buy_date:          raw[:buy_date]          || position.buy_date,
+        dividend_payments: raw[:dividend_payments] || position.dividend_payments
+      }
+    
+      if position.update(updates)
         render json: position
       else
         render json: position.errors, status: :unprocessable_entity
       end
     end
+    
 
     def destroy
       position = @current_user.positions.find(params[:id])
@@ -45,9 +69,10 @@ module Api
         :current_price,
         :name,
         :dividend_yield,
-        :buy_date
+        :buy_date,
+        :dividend_payments
       )
-      
+
       {
         symbol:         raw[:symbol],
         buy_price:      raw[:buy_price],
@@ -55,7 +80,8 @@ module Api
         current_price:  raw[:current_price],
         name:           raw[:name],
         dividend_yield: raw[:dividend_yield],
-        buy_date:       raw[:buy_date]
+        buy_date:       raw[:buy_date],
+        dividend_payments: raw[:dividend_payments]
       }
     end
   end
