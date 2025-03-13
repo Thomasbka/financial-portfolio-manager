@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import ReactDOM from 'react-dom';
 import { BrowserRouter as Router } from "react-router-dom";
 import Layout from './layout';
 import './history.scss';
@@ -26,20 +25,36 @@ const HistoryModal = ({ trade, onClose }) => {
 };
 
 const History = () => {
-  const [trades, setTrades] = useState([
-    { id: 1, ticker: 'NVDA', name: "NVIDIA Corporation", quantity: 5, buyPrice: 480, sellPrice: 520, date: '2025-03-01' },
-    { id: 2, ticker: 'GOOGL', name: "Alphabet Inc. Class A", quantity: 10, buyPrice: 135, sellPrice: 130, date: '2025-03-02' },
-  ]);
-  
+  const [trades, setTrades] = useState([]);
   const [selectedTrade, setSelectedTrade] = useState(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    fetch('/api/positions')
+      .then(res => res.json())
+      .then(data => {
+        const historyTrades = data.map(pos => {
+          return {
+            id: pos.id,
+            ticker: pos.symbol,
+            name: pos.name,
+            quantity: pos.quantity,
+            buyPrice: pos.buy_price,
+            sellPrice: pos.realized_pl > 0 ? pos.current_price : pos.buy_price,
+            date: pos.updated_at
+          };
+        });
+        setTrades(historyTrades);
+      })
+      .catch(err => console.error('Error fetching history:', err));
+  }, []);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
-  
+
   const calculateTradePL = (trade) => {
     return (trade.sellPrice - trade.buyPrice) * trade.quantity;
   };
@@ -103,6 +118,5 @@ const History = () => {
     </Router>
   );
 };
-
 
 export default History;

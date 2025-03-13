@@ -2,15 +2,84 @@ import React, { useState } from 'react';
 import Layout from './layout';
 import './analyser.scss';
 
+function getColorForValue(value) {
+  const red = Math.floor((1 - value) * 255);
+  const green = Math.floor(value * 255);
+  return `rgb(${red}, ${green}, 0)`;
+}
+
+function SentimentBar({ label, value }) {
+  const percentage = (value * 100).toFixed(0);
+  return (
+    <div style={{ marginBottom: '1rem' }}>
+      <strong>{label}: {value}</strong>
+      <div style={{ width: '200px', backgroundColor: '#eee', height: '10px', marginTop: '0.25rem' }}>
+        <div
+          style={{
+            width: `${percentage}%`,
+            backgroundColor: getColorForValue(value),
+            height: '10px',
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function flattenSentiment(result) {
+  if (
+    result &&
+    result.sentiment_analysis &&
+    typeof result.sentiment_analysis === 'object' &&
+    result.sentiment_analysis.ticker === result.ticker &&
+    result.sentiment_analysis.sentiment_analysis
+  ) {
+    return {
+      ticker: result.ticker,
+      sentiment_analysis: result.sentiment_analysis.sentiment_analysis,
+    };
+  }
+  return result;
+}
+
 const Analyser = () => {
   const [symbol, setSymbol] = useState('');
+  const [analysisResult, setAnalysisResult] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const handleSymbolChange = (e) => {
     setSymbol(e.target.value);
   };
 
-  const handleAnalyseClick = () => {
-    console.log('Analyzing symbol:', symbol);
+  const handleAnalyseClick = async () => {
+    setLoading(true);
+    setError(null);
+    setAnalysisResult(null);
+
+    try {
+      const response = await fetch(
+        'https://financial-analysis-api-ad00a96ed0c3.herokuapp.com/analyze',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ticker: symbol }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const flattenedData = flattenSentiment(data);
+      setAnalysisResult(flattenedData);
+    } catch (error) {
+      console.error('API call failed:', error);
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleTrackClick = () => {
@@ -20,17 +89,14 @@ const Analyser = () => {
   return (
     <Layout>
       <h2 className="text-uppercase text-center mb-4">Analyser</h2>
-
       <div className="container analyser-container">
         <div className="row">
-          <div className="col-md-6">
+          <div>
             <h4 className="mb-3">Sentiment Analysis</h4>
             <div className="mb-3">
               <input
                 type="text"
                 className="form-control"
-                id="ticker"
-                name="ticker"
                 placeholder="Enter Symbol/Ticker"
                 value={symbol}
                 onChange={handleSymbolChange}
@@ -40,8 +106,9 @@ const Analyser = () => {
               type="button"
               className="btn btn-primary me-2"
               onClick={handleAnalyseClick}
+              disabled={loading}
             >
-              Analyse
+              {loading ? 'Analysing...' : 'Analyse'}
             </button>
             <button
               type="button"
@@ -50,6 +117,53 @@ const Analyser = () => {
             >
               Track
             </button>
+
+            {error && (
+              <div className="alert alert-danger mt-3">{error}</div>
+            )}
+
+            {analysisResult && analysisResult.sentiment_analysis && (
+              <div className="analysis-result mt-3">
+                <h5>Sentiment Analysis for {analysisResult.ticker}</h5>
+                <div>
+                  <strong>Market Sentiment:</strong> {analysisResult.sentiment_analysis.market_sentiment}
+                </div>
+                <div style={{ marginBottom: '1rem' }}>
+                  <h6>Sentiment Breakdown</h6>
+                  <SentimentBar
+                    label="Positive"
+                    value={analysisResult.sentiment_analysis["Sentiment Breakdown"].positive || 0}
+                  />
+                  <SentimentBar
+                    label="Neutral"
+                    value={analysisResult.sentiment_analysis["Sentiment Breakdown"].neutral || 0}
+                  />
+                  <SentimentBar
+                    label="Negative"
+                    value={analysisResult.sentiment_analysis["Sentiment Breakdown"].negative || 0}
+                  />
+                </div>
+                <div style={{ marginBottom: '1rem' }}>
+                  <h6>Key Reasons</h6>
+                  <p>{analysisResult.sentiment_analysis["Key Reasons"]}</p>
+                </div>
+                <div>
+                  <h6>Confidence Score</h6>
+                  <SentimentBar
+                    label="Positive"
+                    value={analysisResult.sentiment_analysis["Confidence Score"].positive || 0}
+                  />
+                  <SentimentBar
+                    label="Neutral"
+                    value={analysisResult.sentiment_analysis["Confidence Score"].neutral || 0}
+                  />
+                  <SentimentBar
+                    label="Negative"
+                    value={analysisResult.sentiment_analysis["Confidence Score"].negative || 0}
+                  />
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

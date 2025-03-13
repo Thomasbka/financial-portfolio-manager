@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2025_03_08_133224) do
+ActiveRecord::Schema.define(version: 2025_03_09_090811) do
 
   create_table "positions", force: :cascade do |t|
     t.integer "user_id", null: false
@@ -24,6 +24,7 @@ ActiveRecord::Schema.define(version: 2025_03_08_133224) do
     t.decimal "dividend_yield"
     t.date "buy_date"
     t.text "dividend_payments"
+    t.decimal "realized_pl"
     t.index ["user_id"], name: "index_positions_on_user_id"
   end
 

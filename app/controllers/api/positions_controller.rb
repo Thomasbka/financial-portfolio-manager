@@ -12,7 +12,7 @@ module Api
     end
 
     def create
-      @position = @current_user.positions.new(transformed_params)
+      @position = @current_user.positions.new(transformed_params.merge(realized_pl: 0))
       if @position.save
         render json: @position, status: :created
       else
@@ -22,8 +22,8 @@ module Api
 
     def update
       position = @current_user.positions.find(params[:id])
-    
-      raw = params.require(:position).permit(
+      
+      permitted = params.require(:position).permit(
         :symbol,
         :buy_price,
         :quantity,
@@ -31,27 +31,30 @@ module Api
         :name,
         :dividend_yield,
         :buy_date,
-        :dividend_payments
-      )
-    
+        :dividend_payments,
+        :realized_pl
+      ).to_h.symbolize_keys
+
+      new_realized_pl = permitted.key?(:realized_pl) ? permitted[:realized_pl].to_f : position.realized_pl.to_f
+
       updates = {
-        symbol:            raw[:symbol]            || position.symbol,
-        buy_price:         raw[:buy_price]         || position.buy_price,
-        quantity:          raw[:quantity]          || position.quantity,
-        current_price:     raw[:current_price]     || position.current_price,
-        name:              raw[:name]              || position.name,
-        dividend_yield:    raw[:dividend_yield]    || position.dividend_yield,
-        buy_date:          raw[:buy_date]          || position.buy_date,
-        dividend_payments: raw[:dividend_payments] || position.dividend_payments
+        symbol:            permitted[:symbol].presence || position.symbol,
+        buy_price:         permitted[:buy_price].presence || position.buy_price,
+        quantity:          permitted[:quantity].presence || position.quantity,
+        current_price:     permitted[:current_price].presence || position.current_price,
+        name:              permitted[:name].presence || position.name,
+        dividend_yield:    permitted[:dividend_yield].presence || position.dividend_yield,
+        buy_date:          permitted[:buy_date].presence || position.buy_date,
+        dividend_payments: permitted[:dividend_payments].presence || position.dividend_payments,
+        realized_pl:       new_realized_pl
       }
-    
+      
       if position.update(updates)
         render json: position
       else
         render json: position.errors, status: :unprocessable_entity
       end
     end
-    
 
     def destroy
       position = @current_user.positions.find(params[:id])
@@ -74,13 +77,13 @@ module Api
       )
 
       {
-        symbol:         raw[:symbol],
-        buy_price:      raw[:buy_price],
-        quantity:       raw[:quantity],
-        current_price:  raw[:current_price],
-        name:           raw[:name],
-        dividend_yield: raw[:dividend_yield],
-        buy_date:       raw[:buy_date],
+        symbol:            raw[:symbol],
+        buy_price:         raw[:buy_price],
+        quantity:          raw[:quantity],
+        current_price:     raw[:current_price],
+        name:              raw[:name],
+        dividend_yield:    raw[:dividend_yield],
+        buy_date:          raw[:buy_date],
         dividend_payments: raw[:dividend_payments]
       }
     end
