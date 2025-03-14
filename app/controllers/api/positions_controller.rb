@@ -73,7 +73,8 @@ module Api
         :name,
         :dividend_yield,
         :buy_date,
-        :dividend_payments
+        :dividend_payments,
+        :realized_pl
       )
 
       {
@@ -84,7 +85,8 @@ module Api
         name:              raw[:name],
         dividend_yield:    raw[:dividend_yield],
         buy_date:          raw[:buy_date],
-        dividend_payments: raw[:dividend_payments]
+        dividend_payments: raw[:dividend_payments],
+        realized_pl:       raw[:realized_pl]
       }
     end
   end

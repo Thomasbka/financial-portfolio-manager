@@ -242,7 +242,7 @@ const Portfolio = () => {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
 
-  const initialBalance = 10500;
+  const initialBalance = 0;
 
   useEffect(() => {
     fetch('/api/positions')
@@ -270,6 +270,10 @@ const Portfolio = () => {
     0
   );
 
+  function calculateCapitalGains(inv) {
+    return (inv.currentPrice - inv.buyPrice) * inv.quantity;
+  }  
+
   function calculateTotalReturn(inv) {
     const capitalGains = (inv.currentPrice - inv.buyPrice) * inv.quantity;
     const cumulativeDividend = (inv.dividendPayments || []).reduce(
@@ -280,7 +284,7 @@ const Portfolio = () => {
   }
 
   const totalUnrealizedPL = investments.reduce(
-    (sum, inv) => sum + calculateTotalReturn(inv),
+    (sum, inv) => sum + calculateCapitalGains(inv),
     0
   );
 
@@ -491,12 +495,17 @@ const Portfolio = () => {
   function addDividend(positionId, dividendInfo) {
     const inv = investments.find(i => i.id === positionId);
     if (!inv) return;
-
-    const updated = inv.dividendPayments
+  
+    // Append the new dividend info to the existing dividend payments array.
+    const updatedDividendPayments = inv.dividendPayments
       ? [...inv.dividendPayments, dividendInfo]
       : [dividendInfo];
-    const cumDiv = updated.reduce((sum, dp) => sum + parseFloat(dp.amount || 0), 0);
-
+  
+    // Instead of adding the dividend to the unrealized calculation,
+    // update realized_pl by adding the dividend payout.
+    const dividendAmount = parseFloat(dividendInfo.amount);
+    const newRealizedPL = (inv.realizedPL || 0) + dividendAmount;
+  
     const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
     fetch(`/api/positions/${positionId}`, {
       method: 'PATCH',
@@ -506,8 +515,8 @@ const Portfolio = () => {
       },
       body: JSON.stringify({
         position: {
-          dividend_payments: JSON.stringify(updated),
-          dividend_yield: cumDiv
+          dividend_payments: JSON.stringify(updatedDividendPayments),
+          realized_pl: newRealizedPL
         }
       }),
     })
@@ -530,7 +539,7 @@ const Portfolio = () => {
         );
       })
       .catch(err => console.error('Error updating dividend:', err));
-  }
+  }  
 
   function openDetailModal(inv, idx) {
     setSelectedInvestment({ ...inv, index: idx });

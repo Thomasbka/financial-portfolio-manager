@@ -64,15 +64,15 @@ const Layout = ({ children }) => {
               <a className="nav-link p-1 mx-1" href="/portfolio" title="Portfolio">
                 <i className="bi bi-briefcase"></i>
               </a>
-              <a className="nav-link p-1 mx-1" href="/analyser" title="Analyser">
-                <i className="bi bi-graph-up"></i>
-              </a>
-              <a className="nav-link p-1 mx-1" href="/tracker" title="Tracker">
-                <i className="bi bi-clock-history"></i>
-              </a>
               <a className="nav-link p-1 mx-1" href="/history" title="History">
                 <i className="bi bi-journal"></i>
               </a>
+              <a className="nav-link p-1 mx-1" href="/analyser" title="Analyser">
+                <i className="bi bi-graph-up"></i>
+              </a>
+              {/* <a className="nav-link p-1 mx-1" href="/tracker" title="Tracker">
+                <i className="bi bi-clock-history"></i>
+              </a> */}
             </div>
           )}
           <button
@@ -116,15 +116,15 @@ const Layout = ({ children }) => {
               <a className="nav-link text-white" href="/portfolio">
                 Portfolio
               </a>
-              <a className="nav-link text-white" href="/analyser">
-                Analyser
-              </a>
-              <a className="nav-link text-white" href="/tracker">
-                Tracker
-              </a>
               <a className="nav-link text-white" href="/history">
                 History
               </a>
+              <a className="nav-link text-white" href="/analyser">
+                Analyser
+              </a>
+              {/* <a className="nav-link text-white" href="/tracker">
+                Tracker
+              </a> */}
             </nav>
           </aside>
         )}

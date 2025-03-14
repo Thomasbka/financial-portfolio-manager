@@ -82,9 +82,9 @@ const Analyser = () => {
     }
   };
 
-  const handleTrackClick = () => {
-    console.log('Tracking symbol:', symbol);
-  };
+  // const handleTrackClick = () => {
+  //   console.log('Tracking symbol:', symbol);
+  // };
 
   return (
     <Layout>
@@ -110,13 +110,13 @@ const Analyser = () => {
             >
               {loading ? 'Analysing...' : 'Analyse'}
             </button>
-            <button
+            {/* <button
               type="button"
               className="btn btn-secondary"
               onClick={handleTrackClick}
             >
               Track
-            </button>
+            </button> */}
 
             {error && (
               <div className="alert alert-danger mt-3">{error}</div>
