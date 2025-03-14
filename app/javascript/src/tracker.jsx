@@ -20,27 +20,26 @@ const Tracker = () => {
   const [trackedSymbols, setTrackedSymbols] = useState(['NVDA', 'AAPL', 'GOOGL']);
 
   return (
-    <Router>
-      <Layout>
-        <h2 className="text-uppercase text-center">Tracker</h2>
-        <div className="tracker-nav">
-          {trackedSymbols.map((sym, index) => (
-            <Link key={index} to={`/tracker/${sym}`} className="tracker-tab" title={`View ${sym} analysis`}>
-              {sym}
-            </Link>
-          ))}
-        </div>
-        <Switch>
-          <Route path="/tracker/:symbol" component={SymbolAnalysis} />
-          <Route path="/tracker">
-            <div className="tracker-default">
-              <p>Select a tracked symbol to view its daily analysis.</p>
-            </div>
-          </Route>
-        </Switch>
-      </Layout>
-    </Router>
+    <Layout>
+      <h2 className="text-uppercase text-center">Tracker</h2>
+      <div className="tracker-nav">
+        {trackedSymbols.map((sym, index) => (
+          <Link key={index} to={`/tracker/${sym}`} className="tracker-tab" title={`View ${sym} analysis`}>
+            {sym}
+          </Link>
+        ))}
+      </div>
+      <Switch>
+        <Route path="/tracker/:symbol" component={SymbolAnalysis} />
+        <Route path="/tracker">
+          <div className="tracker-default">
+            <p>Select a tracked symbol to view its daily analysis.</p>
+          </div>
+        </Route>
+      </Switch>
+    </Layout>
   );
 };
+
 
 export default Tracker;

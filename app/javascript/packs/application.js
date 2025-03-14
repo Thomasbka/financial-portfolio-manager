@@ -15,6 +15,7 @@ import History from "@src/history.jsx";
 import Portfolio from "@src/portfolio.jsx";
 import Tracker from "@src/tracker.jsx";
 import Login from "@src/login.jsx";
+import Signup from "@src/signup.jsx";
 
 import "bootstrap"; 
 import "bootstrap/dist/css/bootstrap.css";
@@ -23,11 +24,13 @@ import "../src/analyser.scss";
 import "../src/history.scss";
 import "../src/portfolio.scss";
 import "../src/tracker.scss";
+import "../src/auth.scss";
 
 function App() {
   return (
     <Router>
       <Switch>
+        <Route path="/signup" component={Signup} />
         <Route path="/login" component={Login} />
         <Route exact path={["/", "/dashboard"]} component={Dashboard} />
         <Route path="/analyser" component={Analyser} />
