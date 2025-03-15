@@ -40,8 +40,8 @@ const Dashboard = () => {
     <Layout>
       <h4 className="text-uppercase text-center my-4">Dashboard</h4>
       <div className="dashboard-container">
-        <div className="dashboard-section analyser">
-          <h5>Analyser</h5>
+        <div className="dashboard-section tracker">
+          <h5>Tracker</h5>
           <p>{trackerSummary.recentChanges}</p>
         </div>
         <div className="dashboard-section history">

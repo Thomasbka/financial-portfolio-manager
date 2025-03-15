@@ -97,11 +97,6 @@ const Layout = ({ children }) => {
                   Log Out
                 </button>
               </li>
-              <li className="nav-item">
-                <a className="nav-link user-info" href="/settings">
-                  <i className="bi bi-gear"></i>
-                </a>
-              </li>
             </ul>
           </div>
         </div>
