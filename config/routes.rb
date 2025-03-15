@@ -1,4 +1,9 @@
 Rails.application.routes.draw do
+  namespace :api do
+    get 'trades/index'
+    get 'trades/show'
+    get 'trades/create'
+  end
   post '/login', to: 'sessions#create'
   delete '/logout', to: 'sessions#destroy'
   get '/logged_in', to: 'sessions#logged_in'
@@ -7,7 +12,8 @@ Rails.application.routes.draw do
   namespace :api, defaults: { format: :json } do
     resources :users, only: [:index, :show, :create, :update, :destroy]
     resources :positions
-    resources :trackers
+    resources :trackers, only: [:index, :show, :create, :update, :destroy]
+    resources :trades, only: [:index, :show, :create]
   end
 
   namespace :api do

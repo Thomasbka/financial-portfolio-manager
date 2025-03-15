@@ -1,8 +1,10 @@
 .history-container {
   background-color: #f9f9f9;
-  padding: 15px;
+  padding: 1rem;
   border-radius: 5px;
   margin-top: 20px;
+  max-height: 650px;
+  overflow-y: auto;
 }
 
 .history-table {

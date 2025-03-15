@@ -82,17 +82,48 @@ const Analyser = () => {
     }
   };
 
+  const [trackMessage, setTrackMessage] = useState('');
+
   const handleTrackClick = () => {
-    console.log('Tracking symbol:', symbol);
+    if (!analysisResult) return;
+
+    const entireAnalysisJSON = JSON.stringify(analysisResult);
+
+    const payload = {
+      tracker: {
+        symbol: analysisResult.ticker,
+        sentiment: entireAnalysisJSON,
+        technical: "" 
+      }
+    };
+
+    fetch('/api/trackers', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+      },
+      body: JSON.stringify(payload)
+    })
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to save analysis');
+        return res.json();
+      })
+      .then(data => {
+        console.log('Saved analysis:', data);
+        setTrackMessage('The symbol has been saved!');
+      })
+      .catch(err => console.error(err));
   };
+
 
   return (
     <Layout>
-      <h2 className="text-uppercase text-center mb-4">Analyser</h2>
+      <h4 className="text-uppercase text-center my-4">Analyser</h4>
       <div className="container analyser-container">
         <div className="row">
           <div>
-            <h4 className="mb-3">Sentiment Analysis</h4>
+            <h5 className="mb-3">Sentiment Analysis</h5>
             <div className="mb-3">
               <input
                 type="text"

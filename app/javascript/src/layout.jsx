@@ -64,14 +64,14 @@ const Layout = ({ children }) => {
               <a className="nav-link p-1 mx-1" href="/portfolio" title="Portfolio">
                 <i className="bi bi-briefcase"></i>
               </a>
+              <a className="nav-link p-1 mx-1" href="/history" title="History">
+                <i className="bi bi-journal"></i>
+              </a>
               <a className="nav-link p-1 mx-1" href="/analyser" title="Analyser">
                 <i className="bi bi-graph-up"></i>
               </a>
               <a className="nav-link p-1 mx-1" href="/tracker" title="Tracker">
                 <i className="bi bi-clock-history"></i>
-              </a>
-              <a className="nav-link p-1 mx-1" href="/history" title="History">
-                <i className="bi bi-journal"></i>
               </a>
             </div>
           )}
@@ -110,20 +110,20 @@ const Layout = ({ children }) => {
         {!isMobile && (
           <aside className="sidebar">
             <nav className="nav flex-column p-2">
-              <a className="nav-link text-white" href="/">
+              <a className="nav-link text-white my-3" href="/">
                 Dashboard
               </a>
-              <a className="nav-link text-white" href="/portfolio">
+              <a className="nav-link text-white my-3" href="/portfolio">
                 Portfolio
               </a>
-              <a className="nav-link text-white" href="/analyser">
+              <a className="nav-link text-white my-3" href="/history">
+                History
+              </a>
+              <a className="nav-link text-white my-3" href="/analyser">
                 Analyser
               </a>
-              <a className="nav-link text-white" href="/tracker">
+              <a className="nav-link text-white my-3" href="/tracker">
                 Tracker
-              </a>
-              <a className="nav-link text-white" href="/history">
-                History
               </a>
             </nav>
           </aside>
