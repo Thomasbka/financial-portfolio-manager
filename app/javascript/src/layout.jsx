@@ -110,16 +110,16 @@ const Layout = ({ children }) => {
         {!isMobile && (
           <aside className="sidebar">
             <nav className="nav flex-column p-2">
-              <a className="nav-link text-white" href="/">
+              <a className="nav-link text-white my-3" href="/">
                 Dashboard
               </a>
-              <a className="nav-link text-white" href="/portfolio">
+              <a className="nav-link text-white my-3" href="/portfolio">
                 Portfolio
               </a>
-              <a className="nav-link text-white" href="/history">
+              <a className="nav-link text-white my-3" href="/history">
                 History
               </a>
-              <a className="nav-link text-white" href="/analyser">
+              <a className="nav-link text-white my-3" href="/analyser">
                 Analyser
               </a>
               {/* <a className="nav-link text-white" href="/tracker">

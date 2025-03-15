@@ -38,19 +38,19 @@ const Dashboard = () => {
 
   return (
     <Layout>
-      <h2 className="text-uppercase text-center">Dashboard</h2>
+      <h4 className="text-uppercase text-center my-4">Dashboard</h4>
       <div className="dashboard-container">
-        <div className="dashboard-section tracker">
-          <h3>Tracker</h3>
+        <div className="dashboard-section analyser">
+          <h5>Analyser</h5>
           <p>{trackerSummary.recentChanges}</p>
         </div>
         <div className="dashboard-section history">
-          <h3>History</h3>
+          <h5>History</h5>
           <p>{historySummary.performance}</p>
         </div>
       </div>
       <div className="dashboard-section portfolio">
-        <h3>Portfolio</h3>
+        <h5>Portfolio</h5>
         <p>{portfolioSummary.holdings}</p>
         <p><strong>Total Value:</strong> ${portfolioSummary.totalValue}</p>
       </div>

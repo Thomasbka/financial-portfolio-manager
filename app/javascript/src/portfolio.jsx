@@ -456,7 +456,8 @@ const Portfolio = () => {
         position: {
           quantity: newQty,
           realized_pl: newRealized
-        }
+        },
+        sellQuantity: sellQuantity
       }),
     })
       .then(r => r.json())
@@ -496,13 +497,10 @@ const Portfolio = () => {
     const inv = investments.find(i => i.id === positionId);
     if (!inv) return;
   
-    // Append the new dividend info to the existing dividend payments array.
     const updatedDividendPayments = inv.dividendPayments
       ? [...inv.dividendPayments, dividendInfo]
       : [dividendInfo];
   
-    // Instead of adding the dividend to the unrealized calculation,
-    // update realized_pl by adding the dividend payout.
     const dividendAmount = parseFloat(dividendInfo.amount);
     const newRealizedPL = (inv.realizedPL || 0) + dividendAmount;
   
@@ -553,9 +551,8 @@ const Portfolio = () => {
 
   return (
     <Layout>
+      <h4 className="text-uppercase text-center portfolio-title my-4">portfolio</h4>
       <div className="portfolio-container">
-        <h2 className="text-uppercase text-center portfolio-title">PORTFOLIO</h2>
-
         {isMobile ? (
           <div className="mobile-portfolio-list">
             {investments.map((inv, idx) => (
@@ -599,7 +596,7 @@ const Portfolio = () => {
                         <strong>{inv.ticker}</strong><br />
                         <span className="stock-subtext">{inv.name}</span>
                       </td>
-                      <td>${inv.buyPrice}</td>
+                      <td>${inv.buyPrice.toFixed(2)}</td>
                       <td>{inv.quantity}</td>
                       <td>${inv.currentPrice}</td>
                       <td>${capGains}</td>

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2025_03_09_090811) do
+ActiveRecord::Schema.define(version: 2025_03_15_071234) do
 
   create_table "positions", force: :cascade do |t|
     t.integer "user_id", null: false
@@ -38,6 +38,18 @@ ActiveRecord::Schema.define(version: 2025_03_09_090811) do
     t.index ["user_id"], name: "index_trackers_on_user_id"
   end
 
+  create_table "trades", force: :cascade do |t|
+    t.integer "position_id", null: false
+    t.integer "sold_quantity"
+    t.decimal "buy_price"
+    t.decimal "sell_price"
+    t.decimal "profit"
+    t.datetime "trade_date"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["position_id"], name: "index_trades_on_position_id"
+  end
+
   create_table "users", force: :cascade do |t|
     t.string "name"
     t.string "email"
@@ -48,4 +60,5 @@ ActiveRecord::Schema.define(version: 2025_03_09_090811) do
 
   add_foreign_key "positions", "users"
   add_foreign_key "trackers", "users"
+  add_foreign_key "trades", "positions"
 end

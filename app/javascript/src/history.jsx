@@ -30,25 +30,15 @@ const History = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   useEffect(() => {
-    fetch('/api/positions')
+    fetch('/api/trades')
       .then(res => res.json())
       .then(data => {
-        const historyTrades = data.map(pos => {
-          return {
-            id: pos.id,
-            ticker: pos.symbol,
-            name: pos.name,
-            quantity: pos.quantity,
-            buyPrice: pos.buy_price,
-            sellPrice: pos.realized_pl > 0 ? pos.current_price : pos.buy_price,
-            date: pos.updated_at
-          };
-        });
-        setTrades(historyTrades);
+        data.sort((a, b) => new Date(b.date) - new Date(a.date));
+        setTrades(data);
       })
-      .catch(err => console.error('Error fetching history:', err));
+      .catch(err => console.error('Error fetching trade history:', err));
   }, []);
-
+  
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', handleResize);
@@ -62,7 +52,7 @@ const History = () => {
   return (
     <Router>
       <Layout>
-        <h2 className="text-uppercase text-center">History</h2>
+        <h4 className="text-uppercase text-center my-4">Trading History</h4>
         {isMobile ? (
           <div className="history-mobile">
             {trades.map((trade) => (
@@ -99,11 +89,11 @@ const History = () => {
                       <br /><span className="stock-subtext">{trade.name}</span>
                     </td>
                     <td>{trade.quantity}</td>
-                    <td>${trade.buyPrice}</td>
-                    <td>${trade.sellPrice}</td>
+                    <td>${trade.buyPrice.toFixed(2)}</td>
+                    <td>${trade.sellPrice.toFixed(2)}</td>
                     <td>{trade.date}</td>
-                    <td className={calculateTradePL(trade) >= 0 ? 'profit' : 'loss'}>
-                      ${calculateTradePL(trade).toFixed(2)}
+                    <td>
+                      ${((trade.sellPrice - trade.buyPrice) * trade.quantity).toFixed(2)}
                     </td>
                   </tr>
                 ))}
