@@ -1,8 +1,10 @@
 module Api
   class TrackersController < ApplicationController
+    before_action :require_login
+
     def index
-      @trackers = Tracker.all
-      render json: @trackers
+      trackers = @current_user.trackers.order(created_at: :desc)
+      render json: trackers
     end
 
     def show
@@ -12,12 +14,14 @@ module Api
 
     def create
       @tracker = Tracker.new(tracker_params)
+      @tracker.user = @current_user
       if @tracker.save
         render json: @tracker, status: :created
       else
         render json: @tracker.errors, status: :unprocessable_entity
       end
     end
+    
 
     def update
       @tracker = Tracker.find(params[:id])

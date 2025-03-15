@@ -82,9 +82,40 @@ const Analyser = () => {
     }
   };
 
-  // const handleTrackClick = () => {
-  //   console.log('Tracking symbol:', symbol);
-  // };
+  const [trackMessage, setTrackMessage] = useState('');
+
+  const handleTrackClick = () => {
+    if (!analysisResult) return;
+
+    const entireAnalysisJSON = JSON.stringify(analysisResult);
+
+    const payload = {
+      tracker: {
+        symbol: analysisResult.ticker,
+        sentiment: entireAnalysisJSON,
+        technical: "" 
+      }
+    };
+
+    fetch('/api/trackers', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+      },
+      body: JSON.stringify(payload)
+    })
+      .then(res => {
+        if (!res.ok) throw new Error('Failed to save analysis');
+        return res.json();
+      })
+      .then(data => {
+        console.log('Saved analysis:', data);
+        setTrackMessage('The symbol has been saved!');
+      })
+      .catch(err => console.error(err));
+  };
+
 
   return (
     <Layout>
@@ -110,13 +141,13 @@ const Analyser = () => {
             >
               {loading ? 'Analysing...' : 'Analyse'}
             </button>
-            {/* <button
+            <button
               type="button"
               className="btn btn-secondary"
               onClick={handleTrackClick}
             >
               Track
-            </button> */}
+            </button>
 
             {error && (
               <div className="alert alert-danger mt-3">{error}</div>

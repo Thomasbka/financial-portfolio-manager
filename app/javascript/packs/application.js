@@ -36,7 +36,7 @@ function App() {
         <Route path="/analyser" component={Analyser} />
         <Route path="/history" component={History} />
         <Route path="/portfolio" component={Portfolio} />
-        {/* <Route path="/tracker" component={Tracker} /> */}
+        <Route path="/tracker" component={Tracker} />
       </Switch>
     </Router> 
   );

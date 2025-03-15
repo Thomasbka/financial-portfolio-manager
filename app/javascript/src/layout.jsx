@@ -70,9 +70,9 @@ const Layout = ({ children }) => {
               <a className="nav-link p-1 mx-1" href="/analyser" title="Analyser">
                 <i className="bi bi-graph-up"></i>
               </a>
-              {/* <a className="nav-link p-1 mx-1" href="/tracker" title="Tracker">
+              <a className="nav-link p-1 mx-1" href="/tracker" title="Tracker">
                 <i className="bi bi-clock-history"></i>
-              </a> */}
+              </a>
             </div>
           )}
           <button
@@ -122,9 +122,9 @@ const Layout = ({ children }) => {
               <a className="nav-link text-white my-3" href="/analyser">
                 Analyser
               </a>
-              {/* <a className="nav-link text-white" href="/tracker">
+              <a className="nav-link text-white my-3" href="/tracker">
                 Tracker
-              </a> */}
+              </a>
             </nav>
           </aside>
         )}
