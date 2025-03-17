@@ -17,6 +17,31 @@
   border-left: 7px solid #5c4b45; 
 }
 
+.dashboard-section.history {
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 0.5rem;
+
+  .history-container,
+  .history-mobile {
+    max-height: 100%;
+    overflow-y: auto;
+  }
+}
+
+.dashboard-section.history,
+.dashboard-section.portfolio {
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 0.5rem;
+}
+
+.dashboard-row.top-row {
+  display: flex;
+  gap: 1rem;
+}
+
+
 @media (max-width: 768px) {
   .dashboard-container {
     grid-template-columns: 1fr;
