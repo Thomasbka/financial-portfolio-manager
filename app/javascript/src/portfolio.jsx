@@ -237,7 +237,6 @@ const Portfolio = () => {
   });
   const [suggestions, setSuggestions] = useState([]);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-
   const [selectedInvestment, setSelectedInvestment] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -272,7 +271,7 @@ const Portfolio = () => {
 
   function calculateCapitalGains(inv) {
     return (inv.currentPrice - inv.buyPrice) * inv.quantity;
-  }  
+  }
 
   function calculateTotalReturn(inv) {
     const capitalGains = (inv.currentPrice - inv.buyPrice) * inv.quantity;
@@ -332,7 +331,32 @@ const Portfolio = () => {
   }
 
   async function fetchLiveData(symbol) {
-    return { currentPrice: 100, dividend: 0, name: symbol.toUpperCase() };
+    try {
+      const apiKey = process.env.ALPHA_VANTAGE_API_KEY;
+      const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${encodeURIComponent(symbol)}&apikey=${apiKey}`;
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Alpha Vantage API error: ${response.status}`);
+      }
+      const data = await response.json();
+      const quote = data["Global Quote"];
+      if (!quote) {
+        throw new Error("No quote data found");
+      }
+      const currentPrice = parseFloat(quote["05. price"]);
+      return {
+        currentPrice,
+        dividend: 0,
+        name: symbol.toUpperCase()
+      };
+    } catch (error) {
+      console.error("Error fetching live data:", error);
+      return {
+        currentPrice: 0,
+        dividend: 0,
+        name: symbol.toUpperCase()
+      };
+    }
   }
 
   async function addInvestment() {
@@ -496,14 +520,14 @@ const Portfolio = () => {
   function addDividend(positionId, dividendInfo) {
     const inv = investments.find(i => i.id === positionId);
     if (!inv) return;
-  
+
     const updatedDividendPayments = inv.dividendPayments
       ? [...inv.dividendPayments, dividendInfo]
       : [dividendInfo];
-  
+
     const dividendAmount = parseFloat(dividendInfo.amount);
     const newRealizedPL = (inv.realizedPL || 0) + dividendAmount;
-  
+
     const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
     fetch(`/api/positions/${positionId}`, {
       method: 'PATCH',
@@ -537,7 +561,7 @@ const Portfolio = () => {
         );
       })
       .catch(err => console.error('Error updating dividend:', err));
-  }  
+  }
 
   function openDetailModal(inv, idx) {
     setSelectedInvestment({ ...inv, index: idx });
@@ -549,9 +573,40 @@ const Portfolio = () => {
     setShowEditModal(true);
   }
 
+  async function refreshPrices() {
+    const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+    const updatedPositions = await Promise.all(
+      investments.map(async (inv) => {
+        try {
+          const liveData = await fetchLiveData(inv.ticker);
+          await fetch(`/api/positions/${inv.id}`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-Token': csrf,
+            },
+            body: JSON.stringify({
+              position: {
+                current_price: liveData.currentPrice
+              }
+            }),
+          });
+          return { ...inv, currentPrice: liveData.currentPrice };
+        } catch (error) {
+          console.error('Error refreshing price for', inv.ticker, error);
+          return inv;
+        }
+      })
+    );
+    setInvestments(updatedPositions);
+  }
+
   return (
     <Layout>
       <h4 className="text-uppercase text-center portfolio-title my-4">portfolio</h4>
+      <div className="refresh-container">
+        <button className="refresh-button" onClick={refreshPrices}>Refresh Prices</button>
+      </div>
       <div className="portfolio-container">
         {isMobile ? (
           <div className="mobile-portfolio-list">
