@@ -5,7 +5,7 @@ import './dashboard.scss';
 function getColorForValue(value) {
   const red = Math.floor((1 - value) * 255);
   const green = Math.floor(value * 255);
-  return `rgb(${red}, ${green}, 0}`;
+  return `rgb(${red}, ${green}, 0)`;
 }
 
 function SentimentBar({ label, value }) {
@@ -70,16 +70,15 @@ const Dashboard = () => {
     sentimentBreakdown: null,
     confidenceScore: null
   });
+
   const [trades, setTrades] = useState([]);
   const [selectedTrade, setSelectedTrade] = useState(null);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-
   const [positions, setPositions] = useState([]);
   const [portfolioSummary, setPortfolioSummary] = useState({ 
     holdings: 'Loading...', 
     totalValue: 0 
   });
-
   const [profitSection, setProfitSection] = useState({
     totalRealized: 0,
     totalUnrealized: 0,
@@ -97,19 +96,28 @@ const Dashboard = () => {
       let label = 'No tracker data';
       let sentimentBreakdown = null;
       let confidenceScore = null;
+
       if (trackerData.length > 0) {
         try {
-          const parsed = JSON.parse(trackerData[0].sentiment);
-          const flattened = flattenSentiment(parsed);
-          if (flattened && flattened.sentiment_analysis) {
-            label = `${flattened.ticker} (${flattened.sentiment_analysis.market_sentiment || 'Unknown'})`;
-            sentimentBreakdown = flattened.sentiment_analysis["Sentiment Breakdown"] || null;
-            confidenceScore = flattened.sentiment_analysis["Confidence Score"] || null;
+          const raw = trackerData[0].sentiment;
+          if (raw && raw.trim().startsWith('{')) {
+            const parsed = JSON.parse(raw);
+            const flattened = flattenSentiment(parsed);
+            if (flattened && flattened.sentiment_analysis) {
+              label = `${flattened.ticker} (${flattened.sentiment_analysis.market_sentiment || 'Unknown'})`;
+
+              const analysisObj = flattened.sentiment_analysis;
+              sentimentBreakdown = analysisObj["Sentiment Breakdown"] || null;
+              confidenceScore    = analysisObj["Confidence Score"] || null;
+            }
+          } else {
+            console.error("Tracker sentiment is not valid JSON:", trackerData[0].sentiment);
           }
         } catch (err) {
           console.error('Error parsing tracker sentiment in Dashboard:', err);
         }
       }
+
       setTrackerSummary({ label, sentimentBreakdown, confidenceScore });
 
       setPositions(positionData);
@@ -117,6 +125,7 @@ const Dashboard = () => {
       let totalVal = 0;
       let totalRealized = 0;
       let totalUnrealized = 0;
+
       positionData.forEach(pos => {
         const buyNum = parseFloat(pos.buy_price) || 0;
         const currNum = parseFloat(pos.current_price) || 0;
@@ -134,6 +143,7 @@ const Dashboard = () => {
           : 'No positions',
         totalValue: totalVal.toFixed(2)
       });
+
       setProfitSection({
         totalRealized: totalRealized.toFixed(2),
         totalUnrealized: totalUnrealized.toFixed(2),
@@ -168,7 +178,6 @@ const Dashboard = () => {
   return (
     <Layout>
       <h4 className="text-uppercase text-center my-4">Dashboard</h4>
-
       <div className="dashboard-container">
         <div className="dashboard-section tracker">
           <h5>Tracker</h5>
@@ -315,12 +324,14 @@ const Dashboard = () => {
         ) : (
           <p>{portfolioSummary.holdings}</p>
         )}
+
         <div className="profit-section" style={{ marginTop: '1rem' }}>
           <p><strong>Unrealized P/L:</strong> ${profitSection.totalUnrealized}</p>
           <p><strong>Realized P/L:</strong> ${profitSection.totalRealized}</p>
           <p><strong>Total Overall P/L:</strong> ${profitSection.totalOverall}</p>
         </div>
       </div>
+
       {selectedTrade && (
         <HistoryModal trade={selectedTrade} onClose={() => setSelectedTrade(null)} />
       )}
