@@ -227,20 +227,95 @@ const EditModal = ({
   );
 };
 
-const Portfolio = () => {
-  const [investments, setInvestments] = useState([]);
-  const [newInvestment, setNewInvestment] = useState({
+const AddInvestmentModal = ({ show, onClose, onAddInvestment }) => {
+  const [formData, setFormData] = useState({
     ticker: '',
     quantity: '',
     buyPrice: '',
     buyDate: '',
   });
-  const [suggestions, setSuggestions] = useState([]);
+
+  useEffect(() => {
+    if (show) {
+      setFormData({
+        ticker: '',
+        quantity: '',
+        buyPrice: '',
+        buyDate: '',
+      });
+    }
+  }, [show]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async () => {
+    if (!formData.ticker || !formData.quantity || !formData.buyPrice) {
+      alert("Please fill in ticker, quantity, and buy price.");
+      return;
+    }
+    onAddInvestment(formData);
+    onClose();
+  };
+
+  if (!show) return null;
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content add-investment-modal" onClick={(e) => e.stopPropagation()}>
+        <h3>Add Investment</h3>
+        <div className="modal-form-group">
+          <label>Symbol/Ticker</label>
+          <input
+            type="text"
+            name="ticker"
+            value={formData.ticker}
+            onChange={handleChange}
+          />
+        </div>
+        <div className="modal-form-group">
+          <label>Quantity</label>
+          <input
+            type="number"
+            name="quantity"
+            value={formData.quantity}
+            onChange={handleChange}
+          />
+        </div>
+        <div className="modal-form-group">
+          <label>Buy Price</label>
+          <input
+            type="number"
+            name="buyPrice"
+            value={formData.buyPrice}
+            onChange={handleChange}
+          />
+        </div>
+        <div className="modal-form-group">
+          <label>Buy Date</label>
+          <input
+            type="date"
+            name="buyDate"
+            value={formData.buyDate}
+            onChange={handleChange}
+          />
+        </div>
+        <button onClick={handleSubmit}>Add</button>
+        <button className="close-button" onClick={onClose}>Cancel</button>
+      </div>
+    </div>
+  );
+};
+
+const Portfolio = () => {
+  const [investments, setInvestments] = useState([]);
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [selectedInvestment, setSelectedInvestment] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-
+  const [showAddModal, setShowAddModal] = useState(false);
   const initialBalance = 0;
 
   useEffect(() => {
@@ -262,6 +337,10 @@ const Portfolio = () => {
         setInvestments(normalized);
       })
       .catch(err => console.error('Error fetching positions:', err));
+
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   const totalRealizedPL = investments.reduce(
@@ -274,7 +353,7 @@ const Portfolio = () => {
   }
 
   function calculateTotalReturn(inv) {
-    const capitalGains = (inv.currentPrice - inv.buyPrice) * inv.quantity;
+    const capitalGains = calculateCapitalGains(inv);
     const cumulativeDividend = (inv.dividendPayments || []).reduce(
       (sum, dp) => sum + parseFloat(dp.amount || 0),
       0
@@ -288,47 +367,6 @@ const Portfolio = () => {
   );
 
   const accountBalance = initialBalance + totalRealizedPL + totalUnrealizedPL;
-
-  async function fetchSuggestions(query) {
-    if (query.length < 2) {
-      setSuggestions([]);
-      return;
-    }
-    try {
-      const apiKey = process.env.ALPHA_VANTAGE_API_KEY || '';
-      const url = `https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords=${encodeURIComponent(query)}&apikey=${apiKey}`;
-      const resp = await fetch(url, { headers: { Accept: 'application/json' } });
-      if (!resp.ok) throw new Error('Suggestion fetch failed');
-      const data = await resp.json();
-      if (data.Note || data.Information) {
-        console.warn('Alpha Vantage rate-limited or no data.', data);
-        setSuggestions([]);
-        return;
-      }
-      const bestMatches = data.bestMatches || [];
-      const mapped = bestMatches.map(m => ({
-        ticker: m['1. symbol'],
-        name: m['2. name']
-      }));
-      setSuggestions(mapped);
-    } catch (error) {
-      console.error('fetchSuggestions error:', error);
-      setSuggestions([]);
-    }
-  }
-
-  function handleInputChange(e) {
-    const { name, value } = e.target;
-    setNewInvestment(prev => ({ ...prev, [name]: value }));
-    if (name === 'ticker') {
-      fetchSuggestions(value.trim());
-    }
-  }
-
-  function handleSuggestionClick(sugg) {
-    setNewInvestment(prev => ({ ...prev, ticker: sugg.ticker }));
-    setSuggestions([]);
-  }
 
   async function fetchLiveData(symbol) {
     try {
@@ -359,14 +397,15 @@ const Portfolio = () => {
     }
   }
 
-  async function addInvestment() {
-    if (!newInvestment.ticker || !newInvestment.quantity || !newInvestment.buyPrice) return;
-    const live = await fetchLiveData(newInvestment.ticker);
+  async function onAddInvestment(formData) {
+    if (!formData.ticker || !formData.quantity || !formData.buyPrice) return;
+
+    const live = await fetchLiveData(formData.ticker);
     const localObj = {
-      ticker: newInvestment.ticker.toUpperCase(),
-      buyPrice: parseFloat(newInvestment.buyPrice),
-      quantity: parseInt(newInvestment.quantity, 10),
-      buyDate: newInvestment.buyDate || '',
+      ticker: formData.ticker.toUpperCase(),
+      buyPrice: parseFloat(formData.buyPrice),
+      quantity: parseInt(formData.quantity, 10),
+      buyDate: formData.buyDate || '',
       currentPrice: live.currentPrice,
       dividend: 0,
       name: live.name,
@@ -411,9 +450,36 @@ const Portfolio = () => {
           realizedPL: parseFloat(createdPos.realized_pl) || 0
         };
         setInvestments(prev => [...prev, normalized]);
-        setNewInvestment({ ticker: '', quantity: '', buyPrice: '', buyDate: '' });
       })
       .catch(err => console.error('Error adding investment:', err));
+  }
+
+  async function refreshPrices() {
+    const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+    const updatedPositions = await Promise.all(
+      investments.map(async (inv) => {
+        try {
+          const liveData = await fetchLiveData(inv.ticker);
+          await fetch(`/api/positions/${inv.id}`, {
+            method: 'PATCH',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-Token': csrf,
+            },
+            body: JSON.stringify({
+              position: {
+                current_price: liveData.currentPrice
+              }
+            }),
+          });
+          return { ...inv, currentPrice: liveData.currentPrice };
+        } catch (error) {
+          console.error('Error refreshing price for', inv.ticker, error);
+          return inv;
+        }
+      })
+    );
+    setInvestments(updatedPositions);
   }
 
   function updateTrade(positionId, { newQuantity, newBuyPrice }) {
@@ -573,34 +639,6 @@ const Portfolio = () => {
     setShowEditModal(true);
   }
 
-  async function refreshPrices() {
-    const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
-    const updatedPositions = await Promise.all(
-      investments.map(async (inv) => {
-        try {
-          const liveData = await fetchLiveData(inv.ticker);
-          await fetch(`/api/positions/${inv.id}`, {
-            method: 'PATCH',
-            headers: {
-              'Content-Type': 'application/json',
-              'X-CSRF-Token': csrf,
-            },
-            body: JSON.stringify({
-              position: {
-                current_price: liveData.currentPrice
-              }
-            }),
-          });
-          return { ...inv, currentPrice: liveData.currentPrice };
-        } catch (error) {
-          console.error('Error refreshing price for', inv.ticker, error);
-          return inv;
-        }
-      })
-    );
-    setInvestments(updatedPositions);
-  }
-
   return (
     <Layout>
       <h4 className="text-uppercase text-center portfolio-title my-4">portfolio</h4>
@@ -678,55 +716,13 @@ const Portfolio = () => {
             </div>
           </div>
         )}
-
-        <div className="investment-form">
-          <h4 className="form-title">Add Investment:</h4>
-          <div className="form-group">
-            <input
-              type="text"
-              className="form-control"
-              placeholder="Symbol/Ticker"
-              name="ticker"
-              value={newInvestment.ticker}
-              onChange={handleInputChange}
-            />
-            {suggestions.length > 0 && (
-              <ul className="suggestions-list">
-                {suggestions.map((sugg, sidx) => (
-                  <li key={sidx} onClick={() => handleSuggestionClick(sugg)}>
-                    {sugg.ticker} - {sugg.name}
-                  </li>
-                ))}
-              </ul>
-            )}
-            <input
-              type="number"
-              className="form-control"
-              placeholder="Quantity"
-              name="quantity"
-              value={newInvestment.quantity}
-              onChange={handleInputChange}
-            />
-            <input
-              type="number"
-              className="form-control"
-              placeholder="Buy Price"
-              name="buyPrice"
-              value={newInvestment.buyPrice}
-              onChange={handleInputChange}
-            />
-            <input
-              type="date"
-              className="form-control"
-              placeholder="Buy Date"
-              name="buyDate"
-              value={newInvestment.buyDate}
-              onChange={handleInputChange}
-            />
-            <button className="add-button" onClick={addInvestment}>
-              ADD
-            </button>
-          </div>
+        <div style={{ marginTop: '1rem', textAlign: 'center' }}>
+          <button
+            className="add-button"
+            onClick={() => setShowAddModal(true)}
+          >
+            Add Investment
+          </button>
         </div>
       </div>
       <DetailModal
@@ -742,6 +738,11 @@ const Portfolio = () => {
         onSellTrade={sellTrade}
         onAddDividend={addDividend}
         onDelete={deletePosition}
+      />
+      <AddInvestmentModal
+        show={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onAddInvestment={onAddInvestment}
       />
     </Layout>
   );

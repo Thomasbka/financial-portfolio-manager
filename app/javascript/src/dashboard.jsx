@@ -73,7 +73,7 @@ const Dashboard = () => {
 
   const [trades, setTrades] = useState([]);
   const [selectedTrade, setSelectedTrade] = useState(null);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 1081);
   const [positions, setPositions] = useState([]);
   const [portfolioSummary, setPortfolioSummary] = useState({ 
     holdings: 'Loading...', 
@@ -164,7 +164,7 @@ const Dashboard = () => {
       })
       .catch(err => console.error('Error fetching trade history:', err));
 
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    const handleResize = () => setIsMobile(window.innerWidth < 1081);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
@@ -183,8 +183,8 @@ const Dashboard = () => {
           <h5>Tracker</h5>
           <p>{label}</p>
           {sentimentBreakdown && confidenceScore && (
-            <div style={{ display: 'flex', gap: '2rem', marginBottom: '1rem' }}>
-              <div style={{ flex: 1 }}>
+            <div className="tracker-sentiment-section">
+              <div className="tracker-sentiment-col">
                 <h6>Sentiment Breakdown</h6>
                 <SentimentBar
                   label="Positive"
@@ -273,25 +273,12 @@ const Dashboard = () => {
       <div className="dashboard-section portfolio">
         <h5>Portfolio</h5>
         {positions.length > 0 ? (
-          <div className="portfolio-table-container">
-            <table className="portfolio-table">
-              <thead>
-                <tr>
-                  <th>Stock</th>
-                  <th>Buy Price</th>
-                  <th>Quantity</th>
-                  <th>Current Price</th>
-                  <th>Capital Gains</th>
-                  <th>Dividends</th>
-                  <th>Total Return</th>
-                </tr>
-              </thead>
-              <tbody>
-                {positions.map(pos => {
+          isMobile ? (
+              <div className="mobile-portfolio-list">
+                {positions.map((pos, idx) => {
                   const buyNum = parseFloat(pos.buy_price) || 0;
                   const currNum = parseFloat(pos.current_price) || 0;
                   const capGains = (currNum - buyNum) * pos.quantity;
-
                   let dividendsArr = [];
                   if (pos.dividend_payments) {
                     try {
@@ -307,23 +294,69 @@ const Dashboard = () => {
                   const totalReturn = capGains + cumulativeDividend;
 
                   return (
-                    <tr key={pos.id}>
-                      <td>{pos.symbol}</td>
-                      <td>${buyNum.toFixed(2)}</td>
-                      <td>{pos.quantity}</td>
-                      <td>${currNum.toFixed(2)}</td>
-                      <td>${capGains.toFixed(2)}</td>
-                      <td>${cumulativeDividend.toFixed(2)}</td>
-                      <td>${totalReturn.toFixed(2)}</td>
-                    </tr>
+                    <div
+                      key={pos.id || idx}
+                      className="mobile-portfolio-item"
+                    >
+                      <span className="ticker"><strong>{pos.symbol}</strong></span>
+                      <span className="total-return">${totalReturn.toFixed(2)}</span>
+                    </div>
                   );
                 })}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <p>{portfolioSummary.holdings}</p>
-        )}
+              </div>
+            ) : (
+              <div className="portfolio-table-container">
+                <table className="portfolio-table">
+                  <thead>
+                    <tr>
+                      <th>Stock</th>
+                      <th>Buy Price</th>
+                      <th>Quantity</th>
+                      <th>Current Price</th>
+                      <th>Capital Gains</th>
+                      <th>Dividends</th>
+                      <th>Total Return</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {positions.map(pos => {
+                      const buyNum = parseFloat(pos.buy_price) || 0;
+                      const currNum = parseFloat(pos.current_price) || 0;
+                      const capGains = (currNum - buyNum) * pos.quantity;
+                      let dividendsArr = [];
+                      if (pos.dividend_payments) {
+                        try {
+                          dividendsArr = JSON.parse(pos.dividend_payments);
+                        } catch (err) {
+                          console.error('Error parsing dividend_payments:', err);
+                        }
+                      }
+                      const cumulativeDividend = dividendsArr.reduce(
+                        (sum, dp) => sum + parseFloat(dp.amount || 0),
+                        0
+                      );
+                      const totalReturn = capGains + cumulativeDividend;
+
+                      return (
+                        <tr key={pos.id}>
+                          <td>{pos.symbol}</td>
+                          <td>${buyNum.toFixed(2)}</td>
+                          <td>{pos.quantity}</td>
+                          <td>${currNum.toFixed(2)}</td>
+                          <td>${capGains.toFixed(2)}</td>
+                          <td>${cumulativeDividend.toFixed(2)}</td>
+                          <td>${totalReturn.toFixed(2)}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )
+          ) : (
+            <p>{portfolioSummary.holdings}</p>
+          )} 
+
 
         <div className="profit-section" style={{ marginTop: '1rem' }}>
           <p><strong>Unrealized P/L:</strong> ${profitSection.totalUnrealized}</p>
