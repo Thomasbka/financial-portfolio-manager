@@ -41,9 +41,49 @@
   gap: 1rem;
 }
 
+.tracker-sentiment-section {
+  display: flex;
+  gap: 2rem;
+  margin-bottom: 1rem;
+
+  .tracker-sentiment-col {
+    flex: 1;
+  }
+}
+
+.mobile-portfolio-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.mobile-portfolio-item {
+  background: #ddd;
+  border-radius: 8px;
+  padding: 1rem;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ticker {
+  font-size: 1.2rem;
+}
+
+.total-return {
+  font-weight: bold;
+}
+
 
 @media (max-width: 768px) {
   .dashboard-container {
     grid-template-columns: 1fr;
+  }
+  .tracker-sentiment-section {
+    display: block;
+  }
+  .tracker-sentiment-col {
+    margin-bottom: 1rem;
   }
 }

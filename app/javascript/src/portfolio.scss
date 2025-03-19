@@ -6,6 +6,8 @@
   padding: 2px;
   border-radius: 2px;
   position: relative;
+  overflow-x: auto;
+  margin-bottom: 1rem;
 }
 
 .portfolio-table {
@@ -16,7 +18,7 @@
 
 .portfolio-table th,
 .portfolio-table td {
-  padding: 2rem;
+  padding: 1rem;
   text-align: left;
   border-bottom: 1px solid #ccc;
 }
@@ -178,3 +180,45 @@
 .close-button:hover {
   background: #e0e0e0;
 }
+
+.add-investment-modal {
+  max-width: 400px;
+  .modal-form-group {
+    margin-bottom: 1rem;
+    label {
+      display: block;
+      margin-bottom: 0.25rem;
+      font-weight: bold;
+    }
+    input {
+      width: 100%;
+      padding: 0.5rem;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+  }
+  button {
+    margin-right: 0.5rem;
+  }
+}
+
+@media (max-width: 1080px) {
+  .portfolio-table th,
+  .portfolio-table td {
+    padding: 0.75rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .portfolio-table th,
+  .portfolio-table td {
+    padding: 0.5rem;
+  }
+  .form-group {
+    font-size: 14px;
+    .form-control {
+      font-size: 14px;
+    }
+  }
+}
+
