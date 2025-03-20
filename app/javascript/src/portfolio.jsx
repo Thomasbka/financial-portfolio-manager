@@ -235,6 +235,8 @@ const AddInvestmentModal = ({ show, onClose, onAddInvestment }) => {
     buyDate: '',
   });
 
+  const [suggestions, setSuggestions] = useState([]);
+
   useEffect(() => {
     if (show) {
       setFormData({
@@ -243,12 +245,49 @@ const AddInvestmentModal = ({ show, onClose, onAddInvestment }) => {
         buyPrice: '',
         buyDate: '',
       });
+      setSuggestions([]);
     }
   }, [show]);
+
+  async function fetchSuggestions(query) {
+    if (query.length < 2) {
+      setSuggestions([]);
+      return;
+    }
+    try {
+      const apiKey = process.env.ALPHA_VANTAGE_API_KEY || '';
+      const url = `https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords=${encodeURIComponent(query)}&apikey=${apiKey}`;
+      const resp = await fetch(url, { headers: { Accept: 'application/json' } });
+      if (!resp.ok) throw new Error('Suggestion fetch failed');
+      const data = await resp.json();
+      if (data.Note || data.Information) {
+        console.warn('Alpha Vantage rate-limited or no data.', data);
+        setSuggestions([]);
+        return;
+      }
+      const bestMatches = data.bestMatches || [];
+      const mapped = bestMatches.map(m => ({
+        ticker: m['1. symbol'],
+        name: m['2. name']
+      }));
+      setSuggestions(mapped);
+    } catch (error) {
+      console.error('fetchSuggestions error:', error);
+      setSuggestions([]);
+    }
+  }
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    if (name === 'ticker') {
+      fetchSuggestions(value.trim());
+    }
+  };
+
+  const handleSuggestionClick = (sugg) => {
+    setFormData(prev => ({ ...prev, ticker: sugg.ticker }));
+    setSuggestions([]);
   };
 
   const handleSubmit = async () => {
@@ -266,7 +305,7 @@ const AddInvestmentModal = ({ show, onClose, onAddInvestment }) => {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content add-investment-modal" onClick={(e) => e.stopPropagation()}>
         <h3>Add Investment</h3>
-        <div className="modal-form-group">
+        <div className="modal-form-group" style={{ position: 'relative' }}>
           <label>Symbol/Ticker</label>
           <input
             type="text"
@@ -274,6 +313,15 @@ const AddInvestmentModal = ({ show, onClose, onAddInvestment }) => {
             value={formData.ticker}
             onChange={handleChange}
           />
+          {suggestions.length > 0 && (
+            <ul className="suggestions-list">
+              {suggestions.map((sugg, idx) => (
+                <li key={idx} onClick={() => handleSuggestionClick(sugg)}>
+                  {sugg.ticker} - {sugg.name}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
         <div className="modal-form-group">
           <label>Quantity</label>
@@ -687,7 +735,7 @@ const Portfolio = () => {
                     <tr key={inv.id || idx}>
                       <td>
                         <strong>{inv.ticker}</strong><br />
-                        <span className="stock-subtext">{inv.name}</span>
+                        {/* <span className="stock-subtext">{inv.name}</span> */}
                       </td>
                       <td>${inv.buyPrice.toFixed(2)}</td>
                       <td>{inv.quantity}</td>
