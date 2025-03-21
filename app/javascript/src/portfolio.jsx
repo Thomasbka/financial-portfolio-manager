@@ -257,12 +257,10 @@ const AddInvestmentModal = ({ show, onClose, onAddInvestment }) => {
     }
     try {
       const apiKey = process.env.ALPHA_VANTAGE_API_KEY || '';
-      console.log("Using API key:", apiKey);
       const url = `https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords=${encodeURIComponent(query)}&apikey=${apiKey}`;
       const resp = await fetch(url, { headers: { Accept: 'application/json' } });
       if (!resp.ok) throw new Error('Suggestion fetch failed');
       const data = await resp.json();
-      console.log("Suggestion data:", data);
       if (data.Note || data.Information) {
         console.warn('Alpha Vantage rate-limited or no data.', data);
         setSuggestions([]);
