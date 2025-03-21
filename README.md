@@ -64,6 +64,6 @@ The user also has access to a sentiment analysis tool that gives an overall anal
 ## Video Demo
 [Click here to watch a short demo on Vimeo](https://vimeo.com/1068050485?share=copy#t=0)
 
-# Unsolved Problems / Major Hurdles
+## Unsolved Problems / Major Hurdles
 * **API Rate Limiting:** Handling AlphaVantage's free-tier rate limits while fetching live data.
 * **Responsive Design:** Optimizing the user interface for various screen sizes, particularly for forms and tables.
