@@ -19,7 +19,7 @@ The user also has access to a sentiment analysis tool that gives an overall anal
 * **Back End:** Ruby on Rails (6.1+), PostgreSQL (in production)
 * **Hosting:** Heroku
 * **APIs:**
-  * Aplhpa Vantage for live stock data
+  * Aplhaa Vantage for live stock data
   * Sentiment Analysis API (created in python using FastAPI)
 
 ## Approach
@@ -36,26 +36,25 @@ The user also has access to a sentiment analysis tool that gives an overall anal
 
 ## Installation & Setup
 1. **Clone the Repository:**
-git clone https://github.com/Thomasbka/financial-portfolio-manager.git
-cd financial-portfolio-manager
+  - git clone https://github.com/Thomasbka/financial-portfolio-manager.git
+  - cd financial-portfolio-manager
 
 2. **Install Ruby Gems & Node Packages**
-bundle install
-yarn install
-(or npm install if you’re using npm)
+  - bundle install
+  - yarn install (or npm install if you’re using npm)
 
 3. **Set Up the Databse:**
-rails db:create
-rails db:migrate
-rails db:seed  (if you have seed data)
+  - rails db:create
+  - rails db:migrate
+  - rails db:seed  (if you have seed data)
 
 4. **Environment Variables:**
 * Create an .env file (or set environment variables) for things like APLHA_VANTAGE_API_KEY.
 * Example: ALPHA_VANTAGE_API_KEY=your_api_key_here
 
 5. **Run the server:**
-rails server
-Then open http://localhost:3000 in your browser.
+  - rails server
+  - Then open http://localhost:3000 in your browser.
 
 ## Users Stories
 * **Who:** Private investors and traders who want to monitor and manage their stock portfolios.
@@ -63,7 +62,7 @@ Then open http://localhost:3000 in your browser.
 * **Why:** To have a centralized tool that displays performance, calculates profits/losses, and provides actionable data to make informed decisions.
 
 ## Video Demo
-<div style="padding:62.5% 0 0 0;position:relative;"><iframe src="https://player.vimeo.com/video/1068050485?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479" frameborder="0" allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media" style="position:absolute;top:0;left:0;width:100%;height:100%;" title="Financial Portfolio Manager Tutorial"></iframe></div><script src="https://player.vimeo.com/api/player.js"></script>
+[Click here to watch a short demo on Vimeo](https://vimeo.com/1068050485?share=copy#t=0)
 
 # Unsolved Problems / Major Hurdles
 * **API Rate Limiting:** Handling AlphaVantage's free-tier rate limits while fetching live data.
