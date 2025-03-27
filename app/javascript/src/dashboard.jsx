@@ -161,9 +161,18 @@ const Dashboard = () => {
       });
 
       setProfitSection({
-        totalRealized: totalRealized.toFixed(2),
-        totalUnrealized: totalUnrealized.toFixed(2),
-        totalOverall: (totalRealized + totalUnrealized).toFixed(2)
+        totalRealized: totalRealized.toLocaleString(undefined, {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }),
+        totalUnrealized: totalUnrealized.toLocaleString(undefined, {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }),
+        totalOverall: (totalRealized + totalUnrealized).toLocaleString(undefined, {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })
       });
 
       setHistorySummary({ performance: 'Some performance data...' });
