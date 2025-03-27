@@ -52,11 +52,27 @@ const HistoryModal = ({ trade, onClose }) => {
         <p><strong>Stock:</strong> {trade.ticker}</p>
         <p><strong>Name:</strong> {trade.name}</p>
         <p><strong>Quantity:</strong> {trade.quantity}</p>
-        <p><strong>Buy Price:</strong> ${trade.buyPrice.toFixed(2)}</p>
-        <p><strong>Sell Price:</strong> ${trade.sellPrice.toFixed(2)}</p>
+        <p>
+          <strong>Buy Price:</strong> $
+          {parseFloat(trade.buyPrice).toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}
+        </p>
+        <p>
+          <strong>Sell Price:</strong> $
+          {parseFloat(trade.sellPrice).toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}
+        </p>
         <p><strong>Date:</strong> {trade.date}</p>
         <p>
-          <strong>Profit / Loss:</strong> ${profitLoss.toFixed(2)}
+          <strong>Profit / Loss:</strong> $
+          {profitLoss.toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}
         </p>
         <button className="close-modal" onClick={onClose}>Close</button>
       </div>
@@ -229,7 +245,10 @@ const Dashboard = () => {
                 >
                   <span className="mobile-ticker">{trade.ticker}</span>
                   <span className={`mobile-pl ${calculateTradePL(trade) >= 0 ? 'profit' : 'loss'}`}>
-                    ${calculateTradePL(trade).toFixed(2)}
+                    ${calculateTradePL(trade).toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
                   </span>
                 </div>
               ))}
@@ -258,10 +277,19 @@ const Dashboard = () => {
                         <br /><span className="stock-subtext">{trade.name}</span>
                       </td>
                       <td>{trade.quantity}</td>
-                      <td>${trade.buyPrice.toFixed(2)}</td>
-                      <td>${trade.sellPrice.toFixed(2)}</td>
+                      <td>${trade.buyPrice.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}</td>
+                      <td>${trade.sellPrice.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}</td>
                       <td>{trade.date}</td>
-                      <td>${calculateTradePL(trade).toFixed(2)}</td>
+                      <td>${calculateTradePL(trade).toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -299,7 +327,10 @@ const Dashboard = () => {
                       className="mobile-portfolio-item"
                     >
                       <span className="ticker"><strong>{pos.symbol}</strong></span>
-                      <span className="total-return">${totalReturn.toFixed(2)}</span>
+                      <span className="total-return">${totalReturn.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}</span>
                     </div>
                   );
                 })}
@@ -340,12 +371,27 @@ const Dashboard = () => {
                       return (
                         <tr key={pos.id}>
                           <td>{pos.symbol}</td>
-                          <td>${buyNum.toFixed(2)}</td>
+                          <td>${buyNum.toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}</td>
                           <td>{pos.quantity}</td>
-                          <td>${currNum.toFixed(2)}</td>
-                          <td>${capGains.toFixed(2)}</td>
-                          <td>${cumulativeDividend.toFixed(2)}</td>
-                          <td>${totalReturn.toFixed(2)}</td>
+                          <td>${currNum.toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}</td>
+                          <td>${capGains.toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}</td>
+                          <td>${cumulativeDividend.toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}</td>
+                          <td>${totalReturn.toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })}</td>
                         </tr>
                       );
                     })}

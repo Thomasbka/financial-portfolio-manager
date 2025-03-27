@@ -10,20 +10,29 @@ const DetailModal = ({ show, onClose, investment }) => {
     0
   );
 
-  const totalReturn = (
-    (investment.currentPrice - investment.buyPrice) * investment.quantity +
-    cumulativeDividend
-  ).toFixed(2);
+  const totalReturn = (investment.currentPrice - investment.buyPrice) * investment.quantity + cumulativeDividend;
 
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={e => e.stopPropagation()}>
         <h3>{investment.ticker} - {investment.name}</h3>
-        <p><strong>Buy Price:</strong> ${parseFloat(investment.buyPrice).toFixed(2)}</p>
+        <p><strong>Buy Price:</strong> ${parseFloat(investment.buyPrice).toLocaleString(undefined, {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })}</p>
         <p><strong>Quantity:</strong> {investment.quantity}</p>
-        <p><strong>Current Price:</strong> ${investment.currentPrice}</p>
-        <p><strong>Cumulative Dividend:</strong> ${cumulativeDividend.toFixed(2)}</p>
-        <p><strong>Total Return:</strong> ${totalReturn}</p>
+        <p><strong>Current Price:</strong> ${(investment.currentPrice).toLocaleString(undefined, {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })}</p>
+        <p><strong>Cumulative Dividend:</strong> ${(cumulativeDividend).toLocaleString(undefined, {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })}</p>
+        <p><strong>Total Return:</strong> ${totalReturn.toLocaleString(undefined, {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })}</p>
         <button className="close-button" onClick={onClose}>Close</button>
       </div>
     </div>
@@ -705,7 +714,10 @@ const Portfolio = () => {
               >
                 <span className="ticker"><strong>{inv.ticker}</strong></span>
                 <span className="total-return">
-                  ${calculateTotalReturn(inv).toFixed(2)}
+                  ${calculateTotalReturn(inv).toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
                 </span>
               </div>
             ))}
@@ -727,23 +739,35 @@ const Portfolio = () => {
               </thead>
               <tbody>
                 {investments.map((inv, idx) => {
-                  const capGains = ((inv.currentPrice - inv.buyPrice) * inv.quantity).toFixed(2);
+                  const capGains = (inv.currentPrice - inv.buyPrice) * inv.quantity;
                   const cumulativeDividend = (inv.dividendPayments || []).reduce(
                     (sum, d) => sum + parseFloat(d.amount || 0),
                     0
                   );
                   return (
                     <tr key={inv.id || idx}>
-                      <td>
-                        <strong>{inv.ticker}</strong><br />
-                        {/* <span className="stock-subtext">{inv.name}</span> */}
-                      </td>
-                      <td>${inv.buyPrice.toFixed(2)}</td>
+                      <td><strong>{inv.ticker}</strong><br /></td>
+                      <td>${parseFloat(inv.buyPrice).toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}</td>
                       <td>{inv.quantity}</td>
-                      <td>${inv.currentPrice}</td>
-                      <td>${capGains}</td>
-                      <td>${cumulativeDividend.toFixed(2)}</td>
-                      <td>${calculateTotalReturn(inv).toFixed(2)}</td>
+                      <td>${parseFloat(inv.currentPrice).toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}</td>
+                      <td>${capGains.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}</td>
+                      <td>${cumulativeDividend.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}</td>
+                      <td>${calculateTotalReturn(inv).toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}</td>
                       <td>
                         <button
                           className="sell-button"
@@ -759,9 +783,18 @@ const Portfolio = () => {
             </table>
 
             <div className="profit-section">
-              <p><strong>Unrealized P&L:</strong> ${totalUnrealizedPL.toFixed(2)}</p>
-              <p><strong>Realized P&L:</strong> ${totalRealizedPL.toFixed(2)}</p>
-              <p><strong>Account Balance:</strong> ${accountBalance.toFixed(2)}</p>
+              <p><strong>Unrealized P&L:</strong> ${totalUnrealizedPL.toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}</p>
+              <p><strong>Realized P&L:</strong> ${totalRealizedPL.toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}</p>
+              <p><strong>Account Balance:</strong> ${accountBalance.toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}</p>
             </div>
           </div>
         )}

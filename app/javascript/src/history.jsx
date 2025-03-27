@@ -5,6 +5,7 @@ import './history.scss';
 
 const HistoryModal = ({ trade, onClose }) => {
   if (!trade) return null;
+  const profitLoss = (trade.sellPrice - trade.buyPrice) * trade.quantity;
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -12,17 +13,34 @@ const HistoryModal = ({ trade, onClose }) => {
         <p><strong>Stock:</strong> {trade.ticker}</p>
         <p><strong>Name:</strong> {trade.name}</p>
         <p><strong>Quantity:</strong> {trade.quantity}</p>
-        <p><strong>Buy Price:</strong> ${trade.buyPrice}</p>
-        <p><strong>Sell Price:</strong> ${trade.sellPrice}</p>
+        <p>
+          <strong>Buy Price:</strong> $
+          {parseFloat(trade.buyPrice).toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}
+        </p>
+        <p>
+          <strong>Sell Price:</strong> $
+          {parseFloat(trade.sellPrice).toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}
+        </p>
         <p><strong>Date:</strong> {trade.date}</p>
         <p>
-          <strong>Profit / Loss:</strong> ${((trade.sellPrice - trade.buyPrice) * trade.quantity).toFixed(2)}
+          <strong>Profit / Loss:</strong> $
+          {profitLoss.toLocaleString(undefined, {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}
         </p>
         <button className="close-modal" onClick={onClose}>Close</button>
       </div>
     </div>
   );
 };
+
 
 const History = () => {
   const [trades, setTrades] = useState([]);
@@ -63,7 +81,10 @@ const History = () => {
               >
                 <span className="mobile-ticker">{trade.ticker}</span>
                 <span className={`mobile-pl ${calculateTradePL(trade) >= 0 ? 'profit' : 'loss'}`}>
-                  ${calculateTradePL(trade).toFixed(2)}
+                  ${calculateTradePL(trade).toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  })}
                 </span>
               </div>
             ))}
@@ -89,11 +110,19 @@ const History = () => {
                       <br /><span className="stock-subtext">{trade.name}</span>
                     </td>
                     <td>{trade.quantity}</td>
-                    <td>${trade.buyPrice.toFixed(2)}</td>
-                    <td>${trade.sellPrice.toFixed(2)}</td>
+                    <td>${parseFloat(trade.buyPrice).toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,})}</td>
+                    <td>${parseFloat(trade.sellPrice).toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}</td>
                     <td>{trade.date}</td>
                     <td>
-                      ${((trade.sellPrice - trade.buyPrice) * trade.quantity).toFixed(2)}
+                      ${((trade.sellPrice - trade.buyPrice) * trade.quantity).toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2,
+                      })}
                     </td>
                   </tr>
                 ))}
